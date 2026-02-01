@@ -1,0 +1,130 @@
+package commands
+
+import (
+	"encoding/json"
+	"testing"
+)
+
+func TestContainerJSONParsing(t *testing.T) {
+	jsonData := `[{"status":"running","configuration":{"dns":{"searchDomains":[],"options":[],"nameservers":[]},"runtimeHandler":"container-runtime-linux","labels":{},"publishedPorts":[{"count":1,"hostAddress":"0.0.0.0","proto":"tcp","containerPort":80,"hostPort":8080}],"image":{"reference":"docker.io/library/alpine:latest","descriptor":{"size":9218,"mediaType":"application/vnd.oci.image.index.v1+json","digest":"sha256:abc123"}},"id":"test-container","networks":[{"options":{"hostname":"test"},"network":"default"}],"readOnly":false,"virtualization":false,"ssh":false,"sysctls":{},"initProcess":{"supplementalGroups":[],"user":{"id":{"gid":0,"uid":0}},"executable":"sleep","workingDirectory":"/","terminal":false,"arguments":["3600"],"rlimits":[],"environment":["PATH=/usr/local/bin"]},"publishedSockets":[],"rosetta":false,"resources":{"memoryInBytes":1073741824,"cpus":4},"platform":{"os":"linux","architecture":"arm64"},"mounts":[]},"startedDate":791617985.958395,"networks":[{"hostname":"test","network":"default","ipv4Address":"192.168.64.8/24","ipv6Address":"fd::1/64","macAddress":"aa:bb:cc:dd:ee:ff","ipv4Gateway":"192.168.64.1"}]}]`
+
+	var containers []Container
+	if err := json.Unmarshal([]byte(jsonData), &containers); err != nil {
+		t.Fatalf("Failed to parse container JSON: %v", err)
+	}
+
+	if len(containers) != 1 {
+		t.Fatalf("Expected 1 container, got %d", len(containers))
+	}
+
+	c := containers[0]
+
+	if c.GetID() != "test-container" {
+		t.Errorf("Expected ID 'test-container', got '%s'", c.GetID())
+	}
+
+	if c.GetStatus() != "running" {
+		t.Errorf("Expected status 'running', got '%s'", c.GetStatus())
+	}
+
+	if !c.IsRunning() {
+		t.Errorf("Expected IsRunning() to be true")
+	}
+
+	if c.GetImage() != "docker.io/library/alpine:latest" {
+		t.Errorf("Expected image 'docker.io/library/alpine:latest', got '%s'", c.GetImage())
+	}
+
+	if c.GetCPUs() != 4 {
+		t.Errorf("Expected 4 CPUs, got %d", c.GetCPUs())
+	}
+
+	if c.GetPorts() != "8080:80" {
+		t.Errorf("Expected ports '8080:80', got '%s'", c.GetPorts())
+	}
+
+	if c.GetIPAddress() != "192.168.64.8" {
+		t.Errorf("Expected IP '192.168.64.8', got '%s'", c.GetIPAddress())
+	}
+
+	t.Logf("Container parsed successfully: %+v", c.GetName())
+}
+
+func TestImageJSONParsing(t *testing.T) {
+	jsonData := `[{"reference":"docker.io/library/alpine:latest","descriptor":{"size":9218,"digest":"sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659","mediaType":"application/vnd.oci.image.index.v1+json"}}]`
+
+	var images []Image
+	if err := json.Unmarshal([]byte(jsonData), &images); err != nil {
+		t.Fatalf("Failed to parse image JSON: %v", err)
+	}
+
+	if len(images) != 1 {
+		t.Fatalf("Expected 1 image, got %d", len(images))
+	}
+
+	i := images[0]
+
+	if i.Reference != "docker.io/library/alpine:latest" {
+		t.Errorf("Expected reference 'docker.io/library/alpine:latest', got '%s'", i.Reference)
+	}
+
+	if i.GetDigestShort() != "25109184c71b" {
+		t.Errorf("Expected digest short '25109184c71b', got '%s'", i.GetDigestShort())
+	}
+
+	t.Logf("Image parsed successfully: %s", i.Reference)
+}
+
+func TestVolumeJSONParsing(t *testing.T) {
+	jsonData := `[{"sizeInBytes":549755813888,"options":{},"source":"/path/to/volume.img","name":"test-volume","format":"ext4","driver":"local","createdAt":791617985.085557,"labels":{}}]`
+
+	var volumes []Volume
+	if err := json.Unmarshal([]byte(jsonData), &volumes); err != nil {
+		t.Fatalf("Failed to parse volume JSON: %v", err)
+	}
+
+	if len(volumes) != 1 {
+		t.Fatalf("Expected 1 volume, got %d", len(volumes))
+	}
+
+	v := volumes[0]
+
+	if v.Name != "test-volume" {
+		t.Errorf("Expected name 'test-volume', got '%s'", v.Name)
+	}
+
+	if v.Format != "ext4" {
+		t.Errorf("Expected format 'ext4', got '%s'", v.Format)
+	}
+
+	t.Logf("Volume parsed successfully: %s", v.Name)
+}
+
+func TestNetworkJSONParsing(t *testing.T) {
+	jsonData := `[{"state":"running","status":{"ipv4Subnet":"192.168.64.0/24","ipv6Subnet":"fd::0/64","ipv4Gateway":"192.168.64.1"},"id":"default","config":{"mode":"nat","labels":{},"id":"default","creationDate":791602818.713889}}]`
+
+	var networks []Network
+	if err := json.Unmarshal([]byte(jsonData), &networks); err != nil {
+		t.Fatalf("Failed to parse network JSON: %v", err)
+	}
+
+	if len(networks) != 1 {
+		t.Fatalf("Expected 1 network, got %d", len(networks))
+	}
+
+	n := networks[0]
+
+	if n.ID != "default" {
+		t.Errorf("Expected ID 'default', got '%s'", n.ID)
+	}
+
+	if n.State != "running" {
+		t.Errorf("Expected state 'running', got '%s'", n.State)
+	}
+
+	if n.Config.Mode != "nat" {
+		t.Errorf("Expected mode 'nat', got '%s'", n.Config.Mode)
+	}
+
+	t.Logf("Network parsed successfully: %s", n.ID)
+}

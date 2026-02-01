@@ -235,6 +235,10 @@ func (self *SideListPanel[T]) RerenderList() error {
 		}
 		fmt.Fprint(self.View, renderedTable)
 
+		// Always restore cursor position after re-rendering
+		// This ensures highlight stays at the correct line even for non-focused panels
+		self.Refocus()
+
 		if self.OnRerender != nil {
 			if err := self.OnRerender(); err != nil {
 				return err

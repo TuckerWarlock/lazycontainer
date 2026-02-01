@@ -99,7 +99,7 @@ func (c *ContainerCommand) DeleteContainer(id string) error {
 func (c *ContainerCommand) GetContainerLogs(id string, tail int) (string, error) {
 	args := []string{"logs", id}
 	if tail > 0 {
-		args = append(args, "--tail", fmt.Sprintf("%d", tail))
+		args = append(args, "-n", fmt.Sprintf("%d", tail))
 	}
 
 	output, err := c.OSCommand.RunCommandWithArgs("container", args...)

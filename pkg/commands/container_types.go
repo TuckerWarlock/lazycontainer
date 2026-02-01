@@ -97,6 +97,30 @@ func (c *Container) GetPorts() string {
 	return ports
 }
 
+// GetIPAddress returns the primary IPv4 address
+func (c *Container) GetIPAddress() string {
+	if len(c.Networks) == 0 {
+		return ""
+	}
+	return c.Networks[0].GetIP()
+}
+
+// GetStatusSymbol returns a colored status symbol for display
+func (c *Container) GetStatusSymbol() string {
+	switch c.Status {
+	case "running":
+		return "▶"
+	case "stopped", "exited":
+		return "⨯"
+	case "paused":
+		return "◫"
+	case "created":
+		return "+"
+	default:
+		return "?"
+	}
+}
+
 type ContainerConfig struct {
 	ID              string            `json:"id"`
 	Image           ImageRef          `json:"image"`
@@ -187,15 +211,34 @@ type NetworkOptions struct {
 }
 
 type NetworkAttachment struct {
-	Network string `json:"network"`
-	IP      string `json:"ip,omitempty"`
+	Network     string `json:"network"`
+	Hostname    string `json:"hostname,omitempty"`
+	IPv4Address string `json:"ipv4Address,omitempty"`
+	IPv6Address string `json:"ipv6Address,omitempty"`
+	IPv4Gateway string `json:"ipv4Gateway,omitempty"`
+	MACAddress  string `json:"macAddress,omitempty"`
+}
+
+// GetIP returns the IPv4 address without CIDR suffix
+func (n *NetworkAttachment) GetIP() string {
+	if n.IPv4Address == "" {
+		return ""
+	}
+	// Remove CIDR suffix if present
+	for i, c := range n.IPv4Address {
+		if c == '/' {
+			return n.IPv4Address[:i]
+		}
+	}
+	return n.IPv4Address
 }
 
 type PortMapping struct {
 	HostPort      int    `json:"hostPort"`
 	ContainerPort int    `json:"containerPort"`
-	Protocol      string `json:"protocol"`
-	HostIP        string `json:"hostIP,omitempty"`
+	Proto         string `json:"proto"`
+	HostAddress   string `json:"hostAddress,omitempty"`
+	Count         int    `json:"count,omitempty"`
 }
 
 type Platform struct {
@@ -211,30 +254,44 @@ type DNSConfig struct {
 
 // Image represents an Apple container image
 type Image struct {
-	Reference string  `json:"reference"`
-	Digest    string  `json:"digest"`
-	Size      int64   `json:"size"`
-	CreatedAt float64 `json:"createdAt"`
+	Reference  string          `json:"reference"`
+	Descriptor ImageDescriptor `json:"descriptor"`
 }
 
 // GetSizeHuman returns human-readable size
 func (i *Image) GetSizeHuman() string {
-	if i.Size >= 1<<30 {
-		return fmt.Sprintf("%.1fG", float64(i.Size)/(1<<30))
-	} else if i.Size >= 1<<20 {
-		return fmt.Sprintf("%.1fM", float64(i.Size)/(1<<20))
-	} else if i.Size >= 1<<10 {
-		return fmt.Sprintf("%.1fK", float64(i.Size)/(1<<10))
+	size := i.Descriptor.Size
+	if size >= 1<<30 {
+		return fmt.Sprintf("%.1fG", float64(size)/(1<<30))
+	} else if size >= 1<<20 {
+		return fmt.Sprintf("%.1fM", float64(size)/(1<<20))
+	} else if size >= 1<<10 {
+		return fmt.Sprintf("%.1fK", float64(size)/(1<<10))
 	}
-	return fmt.Sprintf("%dB", i.Size)
+	return fmt.Sprintf("%dB", size)
 }
 
 // GetDigestShort returns truncated digest
 func (i *Image) GetDigestShort() string {
-	if len(i.Digest) > 19 {
-		return i.Digest[:19]
+	digest := i.Descriptor.Digest
+	// Remove "sha256:" prefix if present
+	if len(digest) > 7 && digest[:7] == "sha256:" {
+		digest = digest[7:]
 	}
-	return i.Digest
+	if len(digest) > 12 {
+		return digest[:12]
+	}
+	return digest
+}
+
+// GetDigest returns the full digest
+func (i *Image) GetDigest() string {
+	return i.Descriptor.Digest
+}
+
+// GetSize returns the size in bytes
+func (i *Image) GetSize() int64 {
+	return i.Descriptor.Size
 }
 
 // Volume represents an Apple container volume

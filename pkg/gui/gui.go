@@ -223,7 +223,7 @@ func (gui *Gui) getImagesPanel() *panels.SideListPanel[*commands.Image] {
 				}
 			},
 			GetItemContextCacheKey: func(i *commands.Image) string {
-				return "images-" + i.Digest
+				return "images-" + i.GetDigest()
 			},
 		},
 		ListPanel: panels.ListPanel[*commands.Image]{
@@ -414,7 +414,7 @@ func (gui *Gui) formatImageConfig(i *commands.Image) string {
 	sb.WriteString(strings.Repeat("─", 40) + "\n\n")
 
 	sb.WriteString(utils.FormatMapItem(0, "Reference", i.Reference))
-	sb.WriteString(utils.FormatMapItem(0, "Digest", i.Digest))
+	sb.WriteString(utils.FormatMapItem(0, "Digest", i.GetDigest()))
 	sb.WriteString(utils.FormatMapItem(0, "Size", i.GetSizeHuman()))
 
 	return sb.String()
