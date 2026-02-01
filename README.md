@@ -2,6 +2,7 @@
 
 A terminal UI for managing Apple containers, inspired by [lazydocker](https://github.com/jesseduffield/lazydocker).
 
+
 ## Requirements
 
 - macOS 26+ (Tahoe)
