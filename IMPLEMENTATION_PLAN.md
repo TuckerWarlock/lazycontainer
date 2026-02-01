@@ -5,6 +5,7 @@ A TUI for Apple's Containerization framework (macOS 26+), adapted from lazydocke
 ## Current Status
 
 ### Completed
+
 1. **Basic TUI working** - Container list, details panel, keybindings functional
 2. **Core structure created**:
    - `main.go` - Entry point with CLI flags
@@ -12,196 +13,161 @@ A TUI for Apple's Containerization framework (macOS 26+), adapted from lazydocke
    - `pkg/config/app_config.go` - Configuration
    - `pkg/commands/os.go` - OS command execution
    - `pkg/commands/container.go` - Apple container CLI wrapper
-   - `pkg/commands/container_types.go` - Container, Image, Volume, Network structs
-   - `pkg/gui/gui.go` - Basic TUI with container panel
-   - `pkg/i18n/english.go` - Translations (just created)
-   - `pkg/i18n/i18n.go` - Translation loader (just created)
-   - `pkg/tasks/tasks.go` - Task management (just created)
-   - `pkg/gui/types/types.go` - MenuItem type (just created)
+   - `pkg/commands/container_types.go` - Container, Image, Volume, Network structs with helper methods
+   - `pkg/gui/gui.go` - Full TUI with panels system and IGui interface
+   - `pkg/gui/views.go` - Views struct with all gocui views
+   - `pkg/gui/keybindings.go` - Keybindings with mouse support
+   - `pkg/i18n/english.go` - Translations
+   - `pkg/i18n/i18n.go` - Translation loader
+   - `pkg/tasks/tasks.go` - Task management for async operations
+   - `pkg/gui/types/types.go` - MenuItem type
 
-3. **Keybindings working**: j/k navigation, Enter (start), s (stop), d (delete), l (logs), a (toggle all), r (refresh), q (quit)
+3. **Panel Infrastructure** (`pkg/gui/panels/`):
+   - `filtered_list.go` - Generic filtered list with sorting
+   - `list_panel.go` - Base list panel with selection
+   - `context_state.go` - Tab management for main panel
+   - `side_list_panel.go` - Main reusable panel component
 
-### In Progress - Copy Lazydocker Structure
+4. **Presentation Layer** (`pkg/gui/presentation/`):
+   - `containers.go` - Container display with colored status indicators
+   - `images.go` - Image display formatter
+   - `volumes.go` - Volume display formatter
+   - `networks.go` - Network display formatter
 
-The goal is to replicate lazydocker's full panel system for: Containers, Images, Volumes, Networks, and Config view.
+5. **Utility Functions** (`pkg/utils/utils.go`):
+   - `Clamp`, `RenderTable`, `ColoredString`, `WithPadding`
+   - `SplitLines`, `FormatBinaryBytes`, `FormatDecimalBytes`
 
-## Files to Copy/Adapt from Lazydocker
+6. **Container Operations**:
+   - List containers (all/running)
+   - Start/Stop/Delete containers
+   - View container logs (with `-n` flag for Apple CLI)
+   - View container config/inspect
+   - Kill container with signal
 
-### 1. Panel Infrastructure (`pkg/gui/panels/`)
+7. **Image Operations**:
+   - List images
+   - Pull images
+   - Delete images
 
-**Source:** `/Users/warl0ck/Code/lazydocker/pkg/gui/panels/`
+8. **Volume Operations**:
+   - List volumes
+   - Create volumes
+   - Delete volumes
 
-Files to create in `/Users/warl0ck/Code/lazycontainer/pkg/gui/panels/`:
+9. **Network Operations**:
+   - List networks
+   - Create networks
+   - Delete networks
 
-```go
-// filtered_list.go - Generic filtered list with sorting
-// Already in lazydocker - copy and update imports
+10. **Navigation**:
+    - j/k or arrow keys for list navigation
+    - 1/2/3/4 keys for panel switching
+    - Tab cycling through panels
+    - Mouse wheel scrolling
+    - [ ] for main tab switching
+    - Enter, s, d, x keybindings for actions
 
-// list_panel.go - Base list panel with selection
-// Needs: lcUtils.Clamp - either copy from lazycore or implement simple version
+11. **Testing Infrastructure**:
+    - `pkg/commands/container_test.go` - Unit tests for JSON parsing
+    - `scripts/test_setup.sh` - Script to create test containers
 
-// context_state.go - Tab management for main panel
-// Copy and update imports
+### Partially Implemented
 
-// side_list_panel.go - Main reusable panel component
-// Copy and update imports
-```
+1. **Mouse Selection** - Basic mouse click binding exists but cursor highlight behavior needs refinement
+2. **Stats View** - Framework in place but `container stats --format json` parsing not complete
 
-**Key change needed:** Replace `github.com/jesseduffield/lazycore/pkg/utils` with local implementation:
+---
 
-```go
-// Add to pkg/utils/utils.go:
-func Clamp(value, min, max int) int {
-    if value < min {
-        return min
-    }
-    if value > max {
-        return max
-    }
-    return value
-}
-```
+## Comparison with Lazydocker: Missing Features
 
-### 2. Utility Functions (`pkg/utils/`)
+The following features exist in lazydocker but are NOT yet implemented in lazycontainer:
 
-**Source:** `/Users/warl0ck/Code/lazydocker/pkg/utils/utils.go`
+### High Priority - Core Functionality
 
-Copy the following functions:
-- `SplitLines`, `WithPadding`, `ColoredString`, `Decolorise`
-- `RenderTable`, `getPadWidths`, `getPaddedDisplayStrings`
-- `FormatBinaryBytes`, `FormatDecimalBytes`
-- `FormatMap`, `FormatMapItem`
-- `ApplyTemplate`, `GetGocuiAttribute`, `GetColorAttribute`
-- `ColoredYamlString`, `MarshalIntoYaml`
-- `Clamp` (add this)
+#### 1. Confirmation Dialogs (`pkg/gui/confirmation_panel.go`)
+- Modal confirmation before destructive actions (delete, stop, prune)
+- lazydocker uses `CreateConfirmationPanel()` and `CreateMenu()`
+- **Status:** Not implemented - currently actions happen immediately
 
-**Dependencies needed in go.mod:**
-```
-github.com/go-errors/errors v1.0.2
-github.com/goccy/go-yaml v1.11.0
-github.com/mattn/go-runewidth v0.0.15
-```
+#### 2. Filtering System (`pkg/gui/filtering.go`)
+- `/` to enter filter mode
+- Real-time filtering of panel lists
+- Filter indicator in view title
+- **Status:** Panel infrastructure supports it (`DisableFilter` field, `FilterString()`) but UI not connected
 
-### 3. Presentation Layer (`pkg/gui/presentation/`)
+#### 3. Custom Commands (`pkg/config/user_config.go`)
+- User-defined commands per resource type
+- Template variables (`{{.Container.ID}}`, etc.)
+- Custom keybindings for commands
+- **Status:** Not implemented
 
-Create display formatters for each resource type:
+#### 4. Status Manager (`pkg/gui/status_manager.go`)
+- Bottom status line with messages
+- Error display with colors
+- Loading indicators
+- **Status:** Not implemented - errors currently silent or logged
 
-```go
-// containers.go
-func GetContainerDisplayStrings(container *commands.Container) []string {
-    return []string{
-        container.GetStatusSymbol(),
-        container.GetName(),
-        container.GetImage(),
-        container.GetStatus(),
-        container.GetPorts(),
-    }
-}
+### Medium Priority - User Experience
 
-// images.go
-func GetImageDisplayStrings(image *commands.Image) []string {
-    return []string{
-        image.Reference,
-        utils.SafeTruncate(image.Digest, 12),
-        utils.FormatBinaryBytes(int(image.Size)),
-    }
-}
+#### 5. Container Attach/Exec (`pkg/commands/container.go`)
+- Interactive shell into container
+- lazydocker: `docker exec -it container /bin/sh`
+- Apple CLI equivalent: `container exec <id> -- /bin/sh`
+- **Status:** Not implemented
 
-// volumes.go
-func GetVolumeDisplayStrings(volume *commands.Volume) []string {
-    return []string{
-        volume.Name,
-        volume.Format,
-        utils.FormatBinaryBytes(int(volume.SizeInBytes)),
-    }
-}
+#### 6. Subprocess/PTY Support (`pkg/gui/sub_process.go`)
+- Running interactive commands (attach, exec, logs -f)
+- Terminal passthrough with proper PTY handling
+- **Status:** Not implemented - required for attach/exec
 
-// networks.go
-func GetNetworkDisplayStrings(network *commands.Network) []string {
-    return []string{
-        network.ID,
-        network.Config.Type,
-        network.Status.State,
-    }
-}
-```
+#### 7. Bulk Operations (`pkg/gui/bulk_actions.go`)
+- Select multiple items with space
+- Perform action on all selected
+- "Prune" operations (remove all stopped, dangling, etc.)
+- **Status:** Not implemented
 
-### 4. Views Structure (`pkg/gui/views.go`)
+#### 8. Container Top (`pkg/commands/container.go`)
+- Show running processes in container
+- lazydocker: `docker top`
+- Apple CLI: Need to investigate if supported
+- **Status:** Not implemented
 
-```go
-type Views struct {
-    Containers *gocui.View
-    Images     *gocui.View
-    Volumes    *gocui.View
-    Networks   *gocui.View
-    Main       *gocui.View
-    Options    *gocui.View
-    Information *gocui.View
-    Confirmation *gocui.View
-    Menu       *gocui.View
-}
-```
+### Lower Priority - Polish
 
-### 5. Panel Definitions
+#### 9. Information Panel (`pkg/gui/information_panel.go`)
+- Bottom bar showing version, help hints
+- Context-sensitive help
+- **Status:** View exists but not populated
 
-Each panel needs:
-- View setup
-- GetTableCells function
-- Main tabs (Logs, Config, Stats, etc.)
-- Filter/Sort functions
+#### 10. Menu System (`pkg/gui/menu_panel.go`)
+- Popup menus for complex choices
+- E.g., signal selection for kill, restart policies
+- **Status:** Types exist but UI not implemented
 
-**containers_panel.go:**
-```go
-func (gui *Gui) getContainersPanel() *panels.SideListPanel[*commands.Container] {
-    return &panels.SideListPanel[*commands.Container]{
-        ContextState: &panels.ContextState[*commands.Container]{
-            GetMainTabs: func() []panels.MainTab[*commands.Container] {
-                return []panels.MainTab[*commands.Container]{
-                    {Key: "logs", Title: gui.Tr.LogsTitle, Render: gui.renderContainerLogs},
-                    {Key: "config", Title: gui.Tr.ConfigTitle, Render: gui.renderContainerConfig},
-                    {Key: "stats", Title: gui.Tr.StatsTitle, Render: gui.renderContainerStats},
-                }
-            },
-            GetItemContextCacheKey: func(c *commands.Container) string {
-                return "containers-" + c.ID + "-" + c.Status
-            },
-        },
-        ListPanel: panels.ListPanel[*commands.Container]{
-            List: panels.NewFilteredList[*commands.Container](),
-            View: gui.Views.Containers,
-        },
-        NoItemsMessage: gui.Tr.NoContainers,
-        Gui:            gui,
-        GetTableCells:  presentation.GetContainerDisplayStrings,
-    }
-}
-```
+#### 11. Options View (`pkg/gui/options.go`)
+- Show keybindings for current context
+- Dynamic based on selected item type
+- **Status:** View exists but not populated
 
-### 6. Main GUI Restructure
+#### 12. Config File Support (`pkg/config/`)
+- `~/.config/lazycontainer/config.yml`
+- Custom themes, keybindings, commands
+- **Status:** Basic config exists but not user-configurable
 
-The main `gui.go` needs to be restructured to:
+#### 13. Mouse Mode Toggle
+- Option to disable mouse (for tmux compatibility)
+- **Status:** Not implemented
 
-1. Hold `Views` and `Panels` structs
-2. Implement the `IGui` interface for panels
-3. Set up all panels on startup
-4. Handle panel switching with Tab/arrow keys
-5. Render to main panel based on selected item and tab
+#### 14. Scrolling in Main Panel
+- PgUp/PgDown, mouse wheel in main content
+- **Status:** Basic scrolling exists but may need refinement
 
-**Key IGui interface methods:**
-```go
-type IGui interface {
-    HandleClick(v *gocui.View, itemCount int, selectedLine *int, handleSelect func() error) error
-    NewSimpleRenderStringTask(getContent func() string) tasks.TaskFunc
-    FocusY(selectedLine int, itemCount int, view *gocui.View)
-    ShouldRefresh(contextKey string) bool
-    GetMainView() *gocui.View
-    IsCurrentView(*gocui.View) bool
-    FilterString(view *gocui.View) string
-    IgnoreStrings() []string
-    Update(func() error)
-    QueueTask(f func(ctx context.Context)) error
-}
-```
+#### 15. Copy to Clipboard
+- Copy container ID, logs, etc.
+- **Status:** Not implemented
+
+---
 
 ## Apple Container CLI Commands Reference
 
@@ -214,9 +180,10 @@ container list --all --format json
 container start <id>
 container stop <id>
 container delete <id>
-container logs <id> --tail <n>
+container logs <id> -n <lines>        # Note: -n not --tail
 container inspect --format json <id>
 container kill <id> --signal <signal>
+container exec <id> -- <command>      # Interactive execution
 
 # Images
 container image list --format json
@@ -239,93 +206,107 @@ container system start
 container system stop
 ```
 
-## Go Dependencies to Add
-
-```go
-require (
-    github.com/go-errors/errors v1.0.2
-    github.com/goccy/go-yaml v1.11.0
-    github.com/mattn/go-runewidth v0.0.15
-)
-```
-
-## Implementation Order
-
-1. **pkg/utils/utils.go** - Add all utility functions including Clamp
-2. **pkg/gui/panels/** - Copy all 4 files, update imports
-3. **pkg/gui/presentation/** - Create 4 display files
-4. **pkg/gui/views.go** - Create views struct
-5. **pkg/gui/*_panel.go** - Create 4 panel definition files
-6. **pkg/gui/gui.go** - Restructure to use panels system
-7. **pkg/gui/keybindings.go** - Separate keybindings file
-8. **pkg/gui/layout.go** - Layout calculations
-9. **pkg/gui/view_helpers.go** - View manipulation utilities
-
-## Testing Commands
-
-```bash
-cd /Users/warl0ck/Code/lazycontainer
-go build -o lazycontainer .
-./lazycontainer
-```
-
 ## Key Architectural Differences from Lazydocker
 
 1. **No Docker Compose** - Apple containers don't have compose, so no Services/Project panels
 2. **No SSH tunneling** - Local containers only
 3. **Simpler stats** - Container stats may have different format
-4. **No container attach** - May need to implement differently
+4. **No container attach** - May need to implement differently via `container exec`
+5. **Different timestamp format** - Apple uses CFAbsoluteTime (seconds since Jan 1, 2001)
+6. **Different CLI flags** - `-n` instead of `--tail` for logs
 
-## Files Already Created (Build Passing)
+## Directory Structure
 
 ```
 /Users/warl0ck/Code/lazycontainer/
 ├── main.go
 ├── go.mod
 ├── go.sum
-├── IMPLEMENTATION_PLAN.md (this file)
+├── IMPLEMENTATION_PLAN.md
+├── scripts/
+│   └── test_setup.sh           # Test infrastructure setup
 ├── pkg/
 │   ├── app/
 │   │   └── app.go
 │   ├── commands/
 │   │   ├── os.go
 │   │   ├── container.go
-│   │   └── container_types.go
+│   │   ├── container_types.go
+│   │   └── container_test.go
 │   ├── config/
 │   │   └── app_config.go
 │   ├── gui/
-│   │   ├── gui.go (basic TUI working)
+│   │   ├── gui.go
+│   │   ├── views.go
+│   │   ├── keybindings.go
 │   │   ├── panels/
-│   │   │   ├── filtered_list.go ✓
-│   │   │   ├── list_panel.go ✓
-│   │   │   ├── context_state.go ✓
-│   │   │   └── side_list_panel.go ✓
-│   │   ├── presentation/ (empty, needs files)
+│   │   │   ├── filtered_list.go
+│   │   │   ├── list_panel.go
+│   │   │   ├── context_state.go
+│   │   │   └── side_list_panel.go
+│   │   ├── presentation/
+│   │   │   ├── containers.go
+│   │   │   ├── images.go
+│   │   │   ├── volumes.go
+│   │   │   └── networks.go
 │   │   └── types/
-│   │       └── types.go ✓
+│   │       └── types.go
 │   ├── i18n/
-│   │   ├── i18n.go ✓
-│   │   └── english.go ✓
+│   │   ├── i18n.go
+│   │   └── english.go
 │   ├── log/
 │   │   └── log.go
 │   ├── tasks/
-│   │   └── tasks.go ✓
+│   │   └── tasks.go
 │   └── utils/
-│       └── utils.go ✓ (with Clamp, RenderTable, etc.)
+│       └── utils.go
 ```
 
-## Next Steps (for new chat)
+## Implementation Roadmap
 
-1. Create `pkg/gui/presentation/` files for display formatting
-2. Create `pkg/gui/views.go` with Views struct
-3. Restructure `pkg/gui/gui.go` to use the panels system
-4. Create panel definition files (*_panel.go)
+### Phase 1: Core Polish (Current)
+- [ ] Fix mouse selection highlight behavior
+- [ ] Add confirmation dialogs for destructive actions
+- [ ] Implement status bar with error/info messages
+- [ ] Connect filtering UI to panel infrastructure
+
+### Phase 2: Interactive Features
+- [ ] Implement container exec/attach with PTY support
+- [ ] Add subprocess handling for interactive commands
+- [ ] Implement streaming logs (`logs -f`)
+- [ ] Add bulk selection and operations
+
+### Phase 3: User Experience
+- [ ] Config file support (`~/.config/lazycontainer/`)
+- [ ] Custom commands per resource type
+- [ ] Menu system for complex choices
+- [ ] Options panel with keybinding help
+
+### Phase 4: Polish
+- [ ] Information panel with context help
+- [ ] Copy to clipboard functionality
+- [ ] Mouse mode toggle
+- [ ] Theme customization
+
+## Testing Commands
+
+```bash
+# Build and run
+cd /Users/warl0ck/Code/lazycontainer
+go build -o lazycontainer .
+./lazycontainer
+
+# Run tests
+go test ./pkg/commands/...
+
+# Set up test containers
+./scripts/test_setup.sh
+```
 
 ## Resume Instructions
 
-In a new chat:
 1. Read this file: `/Users/warl0ck/Code/lazycontainer/IMPLEMENTATION_PLAN.md`
 2. Read the lazydocker source for reference: `/Users/warl0ck/Code/lazydocker/`
-3. Continue from "Implementation Order" step 1
-4. Copy files from lazydocker, update imports from `github.com/jesseduffield/lazydocker` to `github.com/warl0ck/lazycontainer`
+3. Pick a feature from the Implementation Roadmap
+4. Copy patterns from lazydocker, update imports from `github.com/jesseduffield/lazydocker` to `github.com/warl0ck/lazycontainer`
 5. Replace Docker-specific code with Apple container CLI calls
