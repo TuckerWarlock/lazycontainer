@@ -633,21 +633,45 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		return err
 	}
 
-	// Layout bottom bar (options)
-	gui.Views.Options.Visible = true
-	_, err = g.SetView("options", 0, mainHeight, maxX-1, maxY-1, 0)
-	if err != nil && err.Error() != UNKNOWN_VIEW_ERROR_MSG {
-		return err
+	// Layout bottom bar
+	if gui.State.Filter.active {
+		// Show filter views when filtering
+		gui.Views.Options.Visible = false
+
+		// Filter prefix (e.g., "filter: ")
+		filterPrefixWidth := len(gui.filterPrompt()) + 1
+		gui.Views.FilterPrefix.Visible = true
+		_, err = g.SetView("filterPrefix", 0, mainHeight, filterPrefixWidth, maxY-1, 0)
+		if err != nil && err.Error() != UNKNOWN_VIEW_ERROR_MSG {
+			return err
+		}
+		gui.Views.FilterPrefix.Clear()
+		fmt.Fprint(gui.Views.FilterPrefix, gui.filterPrompt())
+
+		// Filter input
+		gui.Views.Filter.Visible = true
+		_, err = g.SetView("filter", filterPrefixWidth+1, mainHeight, maxX-1, maxY-1, 0)
+		if err != nil && err.Error() != UNKNOWN_VIEW_ERROR_MSG {
+			return err
+		}
+	} else {
+		// Show options bar when not filtering
+		gui.Views.Options.Visible = true
+		_, err = g.SetView("options", 0, mainHeight, maxX-1, maxY-1, 0)
+		if err != nil && err.Error() != UNKNOWN_VIEW_ERROR_MSG {
+			return err
+		}
+
+		gui.Views.Filter.Visible = false
+		gui.Views.FilterPrefix.Visible = false
+
+		// Render options bar
+		gui.renderOptions()
 	}
 
 	// Hide unused views
 	gui.Views.Information.Visible = false
 	gui.Views.AppStatus.Visible = false
-	gui.Views.Filter.Visible = false
-	gui.Views.FilterPrefix.Visible = false
-
-	// Render options bar
-	gui.renderOptions()
 
 	return nil
 }
@@ -689,6 +713,7 @@ func (gui *Gui) renderOptions() {
 		"Enter:start",
 		"s:stop",
 		"d:delete",
+		"/:filter",
 		"[:prev tab",
 		"]:next tab",
 		"q:quit",
@@ -960,4 +985,9 @@ func (gui *Gui) currentSidePanel() (panels.ISideListPanel, bool) {
 func (gui *Gui) resetMainView() {
 	gui.State.Panels.Main.ObjectKey = ""
 	gui.Views.Main.Wrap = true
+}
+
+func (gui *Gui) ResetOrigin(v *gocui.View) {
+	_ = v.SetOrigin(0, 0)
+	_ = v.SetCursor(0, 0)
 }

@@ -97,6 +97,24 @@ func (gui *Gui) keybindings(g *gocui.Gui) error {
 		return err
 	}
 
+	// Filter keybindings - bind '/' on all filterable panels
+	for _, panel := range gui.allSidePanels() {
+		if !panel.IsFilterDisabled() {
+			viewName := panel.GetView().Name()
+			if err := g.SetKeybinding(viewName, '/', gocui.ModNone, gui.handleOpenFilterKeybinding); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Filter view keybindings
+	if err := g.SetKeybinding("filter", gocui.KeyEnter, gocui.ModNone, gui.handleCommitFilter); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("filter", gocui.KeyEsc, gocui.ModNone, gui.handleEscapeFilter); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -605,4 +623,18 @@ func (gui *Gui) getSelectedContainer() *commands.Container {
 // Helper to get current list panel
 func (gui *Gui) currentListPanel() (panels.ISideListPanel, bool) {
 	return gui.currentSidePanel()
+}
+
+// Filter handlers
+
+func (gui *Gui) handleOpenFilterKeybinding(g *gocui.Gui, v *gocui.View) error {
+	return gui.handleOpenFilter()
+}
+
+func (gui *Gui) handleCommitFilter(g *gocui.Gui, v *gocui.View) error {
+	return gui.commitFilter()
+}
+
+func (gui *Gui) handleEscapeFilter(g *gocui.Gui, v *gocui.View) error {
+	return gui.escapeFilterPrompt()
 }

@@ -74,8 +74,7 @@ A TUI for Apple's Containerization framework (macOS 26+), adapted from lazydocke
 
 ### Partially Implemented
 
-1. **Mouse Selection** - Basic mouse click binding exists but cursor highlight behavior needs refinement
-2. **Stats View** - Framework in place but `container stats --format json` parsing not complete
+1. **Stats View** - Framework in place but `container stats --format json` parsing not complete
 
 ---
 
@@ -88,13 +87,13 @@ The following features exist in lazydocker but are NOT yet implemented in lazyco
 #### 1. Confirmation Dialogs (`pkg/gui/confirmation_panel.go`)
 - Modal confirmation before destructive actions (delete, stop, prune)
 - lazydocker uses `CreateConfirmationPanel()` and `CreateMenu()`
-- **Status:** Not implemented - currently actions happen immediately
+- **Status:** Implemented - y/Enter confirms, n/Esc cancels
 
 #### 2. Filtering System (`pkg/gui/filtering.go`)
 - `/` to enter filter mode
 - Real-time filtering of panel lists
 - Filter indicator in view title
-- **Status:** Panel infrastructure supports it (`DisableFilter` field, `FilterString()`) but UI not connected
+- **Status:** Implemented - `/` opens filter, Enter commits, Esc cancels
 
 #### 3. Custom Commands (`pkg/config/user_config.go`)
 - User-defined commands per resource type
@@ -106,7 +105,7 @@ The following features exist in lazydocker but are NOT yet implemented in lazyco
 - Bottom status line with messages
 - Error display with colors
 - Loading indicators
-- **Status:** Not implemented - errors currently silent or logged
+- **Status:** Basic implementation complete (uses options bar, no animated spinner)
 
 ### Medium Priority - User Experience
 
@@ -265,10 +264,10 @@ container system stop
 ## Implementation Roadmap
 
 ### Phase 1: Core Polish (Current)
-- [ ] Fix mouse selection highlight behavior
+- [x] Fix mouse selection highlight behavior
 - [x] Add confirmation dialogs for destructive actions
-- [ ] Implement status bar with error/info messages
-- [ ] Connect filtering UI to panel infrastructure
+- [x] Implement status bar with error/info messages
+- [x] Connect filtering UI to panel infrastructure
 
 ### Phase 2: Interactive Features
 - [ ] Implement container exec/attach with PTY support

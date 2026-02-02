@@ -150,6 +150,7 @@ func (gui *Gui) initializeViews() error {
 	gui.Views.Filter.FgColor = gocui.ColorGreen
 	gui.Views.Filter.Editable = true
 	gui.Views.Filter.Frame = false
+	gui.Views.Filter.Editor = gocui.EditorFunc(gui.wrapEditor(gocui.SimpleEditor))
 
 	return nil
 }
