@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git:*)",
+      "Bash(rm:*)",
+      "Bash(sudo:*)"
+    ],
+    "allow": [
+      "Bash(go build:*)",
+      "Bash(go test:*)",
+      "Bash(go run:*)",
+      "Bash(go mod:*)",
+      "Bash(go fmt:*)",
+      "Bash(go vet:*)",
+      "Bash(./lazycontainer:*)",
+      "Bash(./scripts/*)",
+      "Bash(container:*)",
+      "Bash(ls:*)",
+      "Bash(wget:*)",
+      "Bash(curl:*)",
+      "Bash(fetch:*)",
+      "Bash(grep:*)",
+      "Bash(glob:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)"
+    ]
+  }
+}
