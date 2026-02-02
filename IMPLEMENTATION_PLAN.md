@@ -266,7 +266,7 @@ container system stop
 
 ### Phase 1: Core Polish (Current)
 - [ ] Fix mouse selection highlight behavior
-- [ ] Add confirmation dialogs for destructive actions
+- [x] Add confirmation dialogs for destructive actions
 - [ ] Implement status bar with error/info messages
 - [ ] Connect filtering UI to panel infrastructure
 

@@ -423,22 +423,29 @@ func (gui *Gui) handleContainerStop(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	gui.setStatus(fmt.Sprintf("Stopping %s...", container.GetName()))
+	return gui.createConfirmationPanel(
+		gui.Tr.Confirm,
+		gui.Tr.StopContainer,
+		func(g *gocui.Gui, v *gocui.View) error {
+			gui.setStatus(fmt.Sprintf("Stopping %s...", container.GetName()))
 
-	go func() {
-		err := gui.ContainerCommand.StopContainer(container.GetID())
-		gui.g.Update(func(g *gocui.Gui) error {
-			if err != nil {
-				gui.setStatus(fmt.Sprintf("Error: %v", err))
-			} else {
-				gui.setStatus(fmt.Sprintf("Stopped %s", container.GetName()))
-				gui.refresh()
-			}
+			go func() {
+				err := gui.ContainerCommand.StopContainer(container.GetID())
+				gui.g.Update(func(g *gocui.Gui) error {
+					if err != nil {
+						gui.setStatus(fmt.Sprintf("Error: %v", err))
+					} else {
+						gui.setStatus(fmt.Sprintf("Stopped %s", container.GetName()))
+						gui.refresh()
+					}
+					return nil
+				})
+			}()
+
 			return nil
-		})
-	}()
-
-	return nil
+		},
+		nil,
+	)
 }
 
 func (gui *Gui) handleContainerDelete(g *gocui.Gui, v *gocui.View) error {
@@ -452,22 +459,29 @@ func (gui *Gui) handleContainerDelete(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	gui.setStatus(fmt.Sprintf("Deleting %s...", container.GetName()))
+	return gui.createConfirmationPanel(
+		gui.Tr.Confirm,
+		gui.Tr.ConfirmRemoveContainer,
+		func(g *gocui.Gui, v *gocui.View) error {
+			gui.setStatus(fmt.Sprintf("Deleting %s...", container.GetName()))
 
-	go func() {
-		err := gui.ContainerCommand.DeleteContainer(container.GetID())
-		gui.g.Update(func(g *gocui.Gui) error {
-			if err != nil {
-				gui.setStatus(fmt.Sprintf("Error: %v", err))
-			} else {
-				gui.setStatus(fmt.Sprintf("Deleted %s", container.GetName()))
-				gui.refresh()
-			}
+			go func() {
+				err := gui.ContainerCommand.DeleteContainer(container.GetID())
+				gui.g.Update(func(g *gocui.Gui) error {
+					if err != nil {
+						gui.setStatus(fmt.Sprintf("Error: %v", err))
+					} else {
+						gui.setStatus(fmt.Sprintf("Deleted %s", container.GetName()))
+						gui.refresh()
+					}
+					return nil
+				})
+			}()
+
 			return nil
-		})
-	}()
-
-	return nil
+		},
+		nil,
+	)
 }
 
 func (gui *Gui) handleToggleShowAll(g *gocui.Gui, v *gocui.View) error {
@@ -488,22 +502,29 @@ func (gui *Gui) handleImageDelete(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	gui.setStatus(fmt.Sprintf("Deleting image %s...", image.Reference))
+	return gui.createConfirmationPanel(
+		gui.Tr.Confirm,
+		gui.Tr.ConfirmRemoveImage,
+		func(g *gocui.Gui, v *gocui.View) error {
+			gui.setStatus(fmt.Sprintf("Deleting image %s...", image.Reference))
 
-	go func() {
-		err := gui.ContainerCommand.DeleteImage(image.Reference)
-		gui.g.Update(func(g *gocui.Gui) error {
-			if err != nil {
-				gui.setStatus(fmt.Sprintf("Error: %v", err))
-			} else {
-				gui.setStatus(fmt.Sprintf("Deleted image %s", image.Reference))
-				gui.refresh()
-			}
+			go func() {
+				err := gui.ContainerCommand.DeleteImage(image.Reference)
+				gui.g.Update(func(g *gocui.Gui) error {
+					if err != nil {
+						gui.setStatus(fmt.Sprintf("Error: %v", err))
+					} else {
+						gui.setStatus(fmt.Sprintf("Deleted image %s", image.Reference))
+						gui.refresh()
+					}
+					return nil
+				})
+			}()
+
 			return nil
-		})
-	}()
-
-	return nil
+		},
+		nil,
+	)
 }
 
 // Volume actions
@@ -514,22 +535,29 @@ func (gui *Gui) handleVolumeDelete(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	gui.setStatus(fmt.Sprintf("Deleting volume %s...", volume.Name))
+	return gui.createConfirmationPanel(
+		gui.Tr.Confirm,
+		gui.Tr.ConfirmRemoveVolume,
+		func(g *gocui.Gui, v *gocui.View) error {
+			gui.setStatus(fmt.Sprintf("Deleting volume %s...", volume.Name))
 
-	go func() {
-		err := gui.ContainerCommand.DeleteVolume(volume.Name)
-		gui.g.Update(func(g *gocui.Gui) error {
-			if err != nil {
-				gui.setStatus(fmt.Sprintf("Error: %v", err))
-			} else {
-				gui.setStatus(fmt.Sprintf("Deleted volume %s", volume.Name))
-				gui.refresh()
-			}
+			go func() {
+				err := gui.ContainerCommand.DeleteVolume(volume.Name)
+				gui.g.Update(func(g *gocui.Gui) error {
+					if err != nil {
+						gui.setStatus(fmt.Sprintf("Error: %v", err))
+					} else {
+						gui.setStatus(fmt.Sprintf("Deleted volume %s", volume.Name))
+						gui.refresh()
+					}
+					return nil
+				})
+			}()
+
 			return nil
-		})
-	}()
-
-	return nil
+		},
+		nil,
+	)
 }
 
 // Network actions
@@ -540,22 +568,29 @@ func (gui *Gui) handleNetworkDelete(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	gui.setStatus(fmt.Sprintf("Deleting network %s...", network.ID))
+	return gui.createConfirmationPanel(
+		gui.Tr.Confirm,
+		gui.Tr.ConfirmRemoveNetwork,
+		func(g *gocui.Gui, v *gocui.View) error {
+			gui.setStatus(fmt.Sprintf("Deleting network %s...", network.ID))
 
-	go func() {
-		err := gui.ContainerCommand.DeleteNetwork(network.ID)
-		gui.g.Update(func(g *gocui.Gui) error {
-			if err != nil {
-				gui.setStatus(fmt.Sprintf("Error: %v", err))
-			} else {
-				gui.setStatus(fmt.Sprintf("Deleted network %s", network.ID))
-				gui.refresh()
-			}
+			go func() {
+				err := gui.ContainerCommand.DeleteNetwork(network.ID)
+				gui.g.Update(func(g *gocui.Gui) error {
+					if err != nil {
+						gui.setStatus(fmt.Sprintf("Error: %v", err))
+					} else {
+						gui.setStatus(fmt.Sprintf("Deleted network %s", network.ID))
+						gui.refresh()
+					}
+					return nil
+				})
+			}()
+
 			return nil
-		})
-	}()
-
-	return nil
+		},
+		nil,
+	)
 }
 
 // Helper to get selected container (for backward compatibility)

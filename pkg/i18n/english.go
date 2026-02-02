@@ -75,6 +75,10 @@ type TranslationSet struct {
 	ConfirmPruneContainers  string
 	ConfirmStopContainers   string
 	ConfirmRemoveContainers string
+	ConfirmRemoveContainer  string
+	ConfirmRemoveImage      string
+	ConfirmRemoveVolume     string
+	ConfirmRemoveNetwork    string
 	ConfirmPruneImages      string
 	ConfirmPruneVolumes     string
 	ConfirmPruneNetworks    string
@@ -194,15 +198,19 @@ func englishSet() TranslationSet {
 		NoVolumes:    "No volumes",
 		NoNetworks:   "No networks",
 
-		ConfirmQuit:            "Are you sure you want to quit?",
-		NotEnoughSpace:         "Not enough space to render panels",
-		ConfirmPruneImages:     "Are you sure you want to prune all unused images?",
-		ConfirmPruneContainers: "Are you sure you want to prune all stopped containers?",
-		ConfirmStopContainers:  "Are you sure you want to stop all containers?",
+		ConfirmQuit:             "Are you sure you want to quit?",
+		NotEnoughSpace:          "Not enough space to render panels",
+		ConfirmPruneImages:      "Are you sure you want to prune all unused images?",
+		ConfirmPruneContainers:  "Are you sure you want to prune all stopped containers?",
+		ConfirmStopContainers:   "Are you sure you want to stop all containers?",
 		ConfirmRemoveContainers: "Are you sure you want to remove all containers?",
-		ConfirmPruneVolumes:    "Are you sure you want to prune all unused volumes?",
-		ConfirmPruneNetworks:   "Are you sure you want to prune all unused networks?",
-		StopContainer:          "Are you sure you want to stop this container?",
+		ConfirmRemoveContainer:  "Are you sure you want to remove this container?",
+		ConfirmRemoveImage:      "Are you sure you want to remove this image?",
+		ConfirmRemoveVolume:     "Are you sure you want to remove this volume?",
+		ConfirmRemoveNetwork:    "Are you sure you want to remove this network?",
+		ConfirmPruneVolumes:     "Are you sure you want to prune all unused volumes?",
+		ConfirmPruneNetworks:    "Are you sure you want to prune all unused networks?",
+		StopContainer:           "Are you sure you want to stop this container?",
 
 		No:  "no",
 		Yes: "yes",

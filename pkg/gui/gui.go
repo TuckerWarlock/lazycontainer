@@ -677,6 +677,12 @@ func (gui *Gui) renderOptions() {
 	}
 	gui.Views.Options.Clear()
 
+	// Show confirmation hints when confirmation panel is focused
+	if gui.currentViewName() == "confirmation" {
+		fmt.Fprint(gui.Views.Options, " y/Enter: "+gui.Tr.Yes+" │ n/Esc: "+gui.Tr.No)
+		return
+	}
+
 	hints := []string{
 		"↑↓/jk:navigate",
 		"←→/hl:panels",
@@ -876,6 +882,29 @@ func (gui *Gui) switchFocus(newView *gocui.View) error {
 	gui.State.ViewStack = append(gui.State.ViewStack, newView.Name())
 
 	return gui.newLineFocused(newView)
+}
+
+func (gui *Gui) returnFocus() error {
+	if len(gui.State.ViewStack) <= 1 {
+		return nil
+	}
+
+	// Get the previous view (second to last in stack)
+	previousViewName := gui.State.ViewStack[len(gui.State.ViewStack)-2]
+
+	// Pop the current view from stack
+	gui.State.ViewStack = gui.State.ViewStack[:len(gui.State.ViewStack)-1]
+
+	previousView, err := gui.g.View(previousViewName)
+	if err != nil {
+		return err
+	}
+
+	if _, err := gui.g.SetCurrentView(previousViewName); err != nil {
+		return err
+	}
+
+	return gui.newLineFocused(previousView)
 }
 
 func (gui *Gui) newLineFocused(v *gocui.View) error {
