@@ -75,8 +75,9 @@ type Gui struct {
 	State       guiState
 	taskManager *tasks.TaskManager
 
-	statusMessage string
-	lastRefresh   time.Time
+	statusMessage       string
+	lastRefresh         time.Time
+	PauseBackgroundTasks bool
 }
 
 // NewGui creates a new Gui instance

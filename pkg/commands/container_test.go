@@ -3,6 +3,8 @@ package commands
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
 
 func TestContainerJSONParsing(t *testing.T) {
@@ -127,4 +129,44 @@ func TestNetworkJSONParsing(t *testing.T) {
 	}
 
 	t.Logf("Network parsed successfully: %s", n.ID)
+}
+
+func TestGetContainerLogsStream(t *testing.T) {
+	log := GetTestLogger()
+	osCmd := NewOSCommand(log)
+	containerCmd := NewContainerCommand(log, osCmd, nil)
+
+	// Test that the command is properly constructed
+	cmd := containerCmd.GetContainerLogsStream("test-container", 100)
+
+	if cmd == nil {
+		t.Fatalf("Expected non-nil command")
+	}
+
+	// Check that args include logs, container ID, and follow flag
+	args := cmd.Args
+	if len(args) < 4 {
+		t.Fatalf("Expected at least 4 args, got %d: %v", len(args), args)
+	}
+
+	// args[0] is the command name, args[1] should be "logs"
+	if args[1] != "logs" {
+		t.Errorf("Expected args[1] to be 'logs', got '%s'", args[1])
+	}
+
+	// args[2] should be the container ID
+	if args[2] != "test-container" {
+		t.Errorf("Expected args[2] to be 'test-container', got '%s'", args[2])
+	}
+
+	// args[3] should be "-f"
+	if args[3] != "-f" {
+		t.Errorf("Expected args[3] to be '-f', got '%s'", args[3])
+	}
+
+	t.Logf("GetContainerLogsStream command constructed correctly: %v", args)
+}
+
+func GetTestLogger() *logrus.Entry {
+	return logrus.WithField("test", true)
 }

@@ -270,9 +270,38 @@ container system stop
 - [x] Connect filtering UI to panel infrastructure
 
 ### Phase 2: Interactive Features
+
+#### Streaming Logs ✅ COMPLETE
+Implement real-time log following using `container logs -f`.
+
+**Status:** Implemented and tested
+
+**Architecture:**
+- New `pkg/gui/subprocess.go`: Handles foreground subprocess execution
+  - `runSubprocess()`: Main entry point with GUI suspension
+  - `runCommand()`: Runs process with signal handling
+  - `promptToReturn()`: Waits for user input before resuming
+- `pkg/commands/container.go`: Added `GetContainerLogsStream()` to build streaming exec.Cmd
+- `pkg/commands/os.go`: Added `BuildCommand()` to create unexecuted commands
+- `pkg/gui/keybindings.go`: Added 'f' keybinding and `handleFollowLogs()` handler
+- `pkg/gui/gui.go`: Added `PauseBackgroundTasks` flag to pause refresh during subprocess
+
+**Implementation:**
+- Suspend gocui → run `container logs <id> -f` in foreground → resume gocui
+- Uses proven pattern from lazydocker
+- Proper signal handling (Ctrl+C stops logs, returns to UI)
+- PTY passthrough for natural terminal interaction
+
+**Usage:** Select a container, press 'f' to follow logs in real-time
+
+**Testing:**
+- Command construction verified in unit tests
+- All tests pass: `go test ./pkg/commands`
+- Verified `-f` flag availability in container CLI
+
+---
+
 - [ ] Implement container exec/attach with PTY support
-- [ ] Add subprocess handling for interactive commands
-- [ ] Implement streaming logs (`logs -f`)
 - [ ] Add bulk selection and operations
 
 ### Phase 3: User Experience
