@@ -96,3 +96,13 @@ func (c *OSCommand) RunCommandWithInput(cmdStr string, input string) (string, er
 
 	return stdout.String(), nil
 }
+
+// BuildCommand builds an exec.Cmd without running it (for subprocess execution)
+func (c *OSCommand) BuildCommand(name string, args ...string) *exec.Cmd {
+	c.Log.WithFields(logrus.Fields{
+		"command": name,
+		"args":    args,
+	}).Debug("Building command")
+
+	return exec.Command(name, args...)
+}

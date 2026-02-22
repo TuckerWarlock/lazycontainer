@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"os/exec"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -108,6 +109,16 @@ func (c *ContainerCommand) GetContainerLogs(id string, tail int) (string, error)
 	}
 
 	return output, nil
+}
+
+// GetContainerLogsStream returns a command to stream container logs
+func (c *ContainerCommand) GetContainerLogsStream(id string, tail int) *exec.Cmd {
+	args := []string{"logs", id, "-f"}
+	if tail > 0 {
+		args = append(args, "-n", fmt.Sprintf("%d", tail))
+	}
+
+	return c.OSCommand.BuildCommand("container", args...)
 }
 
 // KillContainer sends a signal to a container

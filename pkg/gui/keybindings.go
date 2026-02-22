@@ -75,6 +75,9 @@ func (gui *Gui) keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("containers", 'd', gocui.ModNone, gui.handleContainerDelete); err != nil {
 		return err
 	}
+	if err := g.SetKeybinding("containers", 'f', gocui.ModNone, gui.handleFollowLogs); err != nil {
+		return err
+	}
 	if err := g.SetKeybinding("containers", 'a', gocui.ModNone, gui.handleToggleShowAll); err != nil {
 		return err
 	}
@@ -623,6 +626,23 @@ func (gui *Gui) getSelectedContainer() *commands.Container {
 // Helper to get current list panel
 func (gui *Gui) currentListPanel() (panels.ISideListPanel, bool) {
 	return gui.currentSidePanel()
+}
+
+func (gui *Gui) handleFollowLogs(g *gocui.Gui, v *gocui.View) error {
+	container, err := gui.Panels.Containers.GetSelectedItem()
+	if err != nil {
+		gui.setStatus("No container selected")
+		return nil
+	}
+
+	cmd := gui.ContainerCommand.GetContainerLogsStream(container.GetID(), 100)
+	if err := gui.runSubprocess(cmd); err != nil {
+		gui.setStatus(fmt.Sprintf("Error: %v", err))
+		return nil
+	}
+
+	gui.refresh()
+	return nil
 }
 
 // Filter handlers
