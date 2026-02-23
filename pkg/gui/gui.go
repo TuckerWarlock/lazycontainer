@@ -208,6 +208,9 @@ func (gui *Gui) getContainersPanel() *panels.SideListPanel[*commands.Container] 
 		NoItemsMessage: gui.Tr.NoContainers,
 		Gui:            gui,
 		GetTableCells:  presentation.GetContainerDisplayStrings,
+		GetItemID: func(c *commands.Container) string {
+			return c.GetID()
+		},
 	}
 }
 
@@ -311,16 +314,40 @@ func (gui *Gui) getMenuPanel() *panels.SideListPanel[*types.MenuItem] {
 
 // render task functions for each panel type
 func (gui *Gui) renderContainerLogsTask(c *commands.Container) tasks.TaskFunc {
-	return gui.NewSimpleRenderStringTask(func() string {
-		if c == nil {
-			return ""
-		}
-		logs, err := gui.ContainerCommand.GetContainerLogs(c.GetID(), 100)
+	if c == nil {
+		return gui.NewSimpleRenderStringTask(func() string { return "" })
+	}
+
+	containerID := c.GetID()
+
+	return func(ctx context.Context) {
+		// Continuously stream logs
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+
+		// Fetch logs immediately on first display
+		logs, err := gui.ContainerCommand.GetContainerLogs(containerID, 100)
 		if err != nil {
-			return fmt.Sprintf("Error fetching logs: %v", err)
+			gui.RenderStringMain(fmt.Sprintf("Error fetching logs: %v", err))
+		} else {
+			gui.RenderStringMain(logs)
 		}
-		return logs
-	})
+
+		// Then update every second
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				logs, err := gui.ContainerCommand.GetContainerLogs(containerID, 100)
+				if err != nil {
+					gui.RenderStringMain(fmt.Sprintf("Error fetching logs: %v", err))
+				} else {
+					gui.RenderStringMain(logs)
+				}
+			}
+		}
+	}
 }
 
 func (gui *Gui) renderContainerConfigTask(c *commands.Container) tasks.TaskFunc {
