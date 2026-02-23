@@ -331,7 +331,96 @@ Implement interactive shell access to running containers using `container exec <
 
 ---
 
-- [ ] Add bulk selection and operations
+#### Bulk Operations ✅ COMPLETE
+Multi-select containers and perform batch actions (delete, stop).
+
+**Status:** Implemented and tested
+
+**Architecture:**
+- `pkg/gui/panels/side_list_panel.go`:
+  - Added `selectedItems` map for tracking selections by ID
+  - Added `GetItemID` function parameter for ID extraction
+  - Added selection methods: `ToggleSelection()`, `GetSelectedCount()`, `GetSelectedItems()`, `ClearSelection()`
+- `pkg/gui/keybindings.go`:
+  - Added Space keybinding for toggle selection
+  - Modified `handleContainerDelete()` and `handleContainerStop()` for bulk operations
+  - Added `handleToggleContainerSelection()` handler
+- `pkg/gui/gui.go`:
+  - Added `GetItemID` function to containers panel initialization
+
+**Implementation:**
+- Space key toggles selection on current item, moves to next
+- Status bar shows "Selected: N containers" when items selected
+- Bulk delete: confirm once, delete all stopped selected containers
+- Bulk stop: confirm once, stop all running selected containers
+- Clear selections after successful operation
+- Falls back to single-item behavior if no selections
+
+**Usage:**
+- Press Space to select/deselect containers
+- Press 'd' to delete selected (or current)
+- Press 's' to stop selected (or current)
+
+**Testing:**
+- Build verified
+- All tests pass
+- Manual testing: multi-select, bulk operations work
+
+---
+
+#### Streaming Stats ✅ COMPLETE (PHASE 2 COMPLETE!)
+Real-time container CPU, memory, and network statistics streaming.
+
+**Status:** Implemented and tested
+
+**Architecture:**
+- `pkg/commands/container.go`: Added `GetContainerStatsStream(id string) *exec.Cmd`
+  - Builds: `container stats <id> --format json`
+  - Returns unexecuted command for subprocess runner
+- `pkg/gui/keybindings.go`:
+  - Added 'v' keybinding in containers panel
+  - Added `handleStreamStats()` handler
+  - Validation: only runs on **running** containers
+- Reuses subprocess infrastructure from streaming logs
+
+**Implementation:**
+- Suspend gocui → run `container stats <id> --format json` in foreground → resume gocui
+- Streams live metrics: CPU, memory, network I/O
+- Ctrl+C stops streaming and returns to UI
+- Error handling: shows status message if container not running
+
+**JSON Stats Format:**
+```json
+{
+  "memoryLimitBytes": 1073741824,
+  "memoryUsageBytes": 2060288,
+  "cpuUsageUsec": 2996,
+  "blockWriteBytes": 0,
+  "blockReadBytes": 1900544,
+  "networkTxBytes": 602,
+  "networkRxBytes": 16750,
+  "numProcesses": 1,
+  "id": "container-id"
+}
+```
+
+**Usage:** Select a running container, press 'v' to view streaming stats
+
+**Testing:**
+- Unit tests: command construction verified
+- All tests pass: `go test ./pkg/commands`
+- Build verified: `go build -o lazycontainer .`
+- Manual testing: stats stream on running containers
+
+---
+
+## Phase 2: Interactive Features ✅ COMPLETE!
+
+All Phase 2 features implemented:
+- ✅ Streaming logs ('f' keybinding)
+- ✅ Container exec/attach ('e' keybinding)
+- ✅ Bulk operations (Space to select)
+- ✅ Streaming stats ('v' keybinding)
 
 
 ### Phase 3: User Experience

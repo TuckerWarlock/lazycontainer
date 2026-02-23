@@ -222,6 +222,45 @@ func TestGetContainerExec(t *testing.T) {
 	t.Logf("GetContainerExec custom command correct: %v", argsCustom)
 }
 
+func TestGetContainerStatsStream(t *testing.T) {
+	log := GetTestLogger()
+	osCmd := NewOSCommand(log)
+	containerCmd := NewContainerCommand(log, osCmd, nil)
+
+	cmd := containerCmd.GetContainerStatsStream("test-container")
+
+	if cmd == nil {
+		t.Fatalf("Expected non-nil command")
+	}
+
+	args := cmd.Args
+	if len(args) < 5 {
+		t.Fatalf("Expected at least 5 args, got %d: %v", len(args), args)
+	}
+
+	// args[1] should be "stats"
+	if args[1] != "stats" {
+		t.Errorf("Expected args[1] to be 'stats', got '%s'", args[1])
+	}
+
+	// args[2] should be the container ID
+	if args[2] != "test-container" {
+		t.Errorf("Expected args[2] to be 'test-container', got '%s'", args[2])
+	}
+
+	// args[3] should be "--format"
+	if args[3] != "--format" {
+		t.Errorf("Expected args[3] to be '--format', got '%s'", args[3])
+	}
+
+	// args[4] should be "json"
+	if args[4] != "json" {
+		t.Errorf("Expected args[4] to be 'json', got '%s'", args[4])
+	}
+
+	t.Logf("GetContainerStatsStream command constructed correctly: %v", args)
+}
+
 func GetTestLogger() *logrus.Entry {
 	return logrus.WithField("test", true)
 }

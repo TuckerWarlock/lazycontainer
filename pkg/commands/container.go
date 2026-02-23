@@ -131,6 +131,12 @@ func (c *ContainerCommand) GetContainerExec(id string, cmd string) *exec.Cmd {
 	return c.OSCommand.BuildCommand("container", args...)
 }
 
+// GetContainerStatsStream returns a command to stream container stats
+func (c *ContainerCommand) GetContainerStatsStream(id string) *exec.Cmd {
+	args := []string{"stats", id, "--format", "json"}
+	return c.OSCommand.BuildCommand("container", args...)
+}
+
 // KillContainer sends a signal to a container
 func (c *ContainerCommand) KillContainer(id string, signal string) error {
 	args := []string{"kill", id}
