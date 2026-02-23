@@ -1,5 +1,7 @@
 # lazycontainer
 
+[![Test and Build](https://github.com/TuckerWarlock/lazycontainer/actions/workflows/test-build.yml/badge.svg)](https://github.com/TuckerWarlock/lazycontainer/actions/workflows/test-build.yml)
+
 A terminal UI for managing Apple containers, inspired by [lazydocker](https://github.com/jesseduffield/lazydocker).
 
 
