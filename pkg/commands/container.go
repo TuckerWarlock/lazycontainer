@@ -121,6 +121,16 @@ func (c *ContainerCommand) GetContainerLogsStream(id string, tail int) *exec.Cmd
 	return c.OSCommand.BuildCommand("container", args...)
 }
 
+// GetContainerExec returns a command to execute an interactive shell in a container
+func (c *ContainerCommand) GetContainerExec(id string, cmd string) *exec.Cmd {
+	if cmd == "" {
+		cmd = "/bin/sh"
+	}
+
+	args := []string{"exec", id, "--", cmd}
+	return c.OSCommand.BuildCommand("container", args...)
+}
+
 // KillContainer sends a signal to a container
 func (c *ContainerCommand) KillContainer(id string, signal string) error {
 	args := []string{"kill", id}

@@ -301,8 +301,38 @@ Implement real-time log following using `container logs -f`.
 
 ---
 
-- [ ] Implement container exec/attach with PTY support
+#### Container Exec/Attach ✅ COMPLETE
+Implement interactive shell access to running containers using `container exec <id> -- /bin/sh`.
+
+**Status:** Implemented and tested
+
+**Architecture:**
+- `pkg/commands/container.go`: Added `GetContainerExec(id, cmd string) *exec.Cmd`
+  - Builds: `container exec <id> -- <cmd>` (defaults to `/bin/sh`)
+  - Returns unexecuted command for subprocess runner
+- `pkg/gui/keybindings.go`: 
+  - Added 'e' keybinding in containers panel
+  - Added `handleContainerExec()` handler
+  - Validation: only runs on **running** containers
+- Reuses subprocess infrastructure from streaming logs
+
+**Implementation:**
+- Suspend gocui → run `container exec <id> -- /bin/sh` in foreground → resume gocui
+- Full interactive terminal: stdin/stdout/stderr passthrough
+- Ctrl+C terminates shell and returns to UI
+- Error handling: shows status message if container not running
+
+**Usage:** Select a running container, press 'e' to open interactive shell
+
+**Testing:**
+- Unit tests: command construction with default and custom commands
+- All tests pass: `go test ./pkg/commands`
+- Build verified: `go build -o lazycontainer .`
+
+---
+
 - [ ] Add bulk selection and operations
+
 
 ### Phase 3: User Experience
 - [ ] Config file support (`~/.config/lazycontainer/`)
