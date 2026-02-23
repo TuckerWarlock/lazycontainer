@@ -20,8 +20,9 @@ container image pull alpine:latest || {
 }
 
 echo ""
-echo "2. Creating test volume..."
-container volume create test-volume 2>/dev/null || echo "Volume 'test-volume' may already exist"
+echo "2. Creating test volumes..."
+# Create a 250MB test volume (small, fast to allocate)
+container volume create test-volume --size 250m 2>/dev/null || echo "Volume 'test-volume' may already exist"
 
 echo ""
 echo "3. Creating test network..."
@@ -47,6 +48,13 @@ echo "   - Creating 'test-web'..."
 container run --name test-web -d -p 8080:80 alpine:latest sh -c "while true; do echo -e 'HTTP/1.1 200 OK\n\nHello from lazycontainer test!' | nc -l -p 80; done" 2>/dev/null || {
     echo "   Container may already exist"
     container start test-web 2>/dev/null || true
+}
+
+# Container 4: Logger container (for streaming logs testing)
+echo "   - Creating 'test-logger'..."
+container run --name test-logger -d alpine:latest sh -c "while true; do echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Application running\"; sleep 2; done" 2>/dev/null || {
+    echo "   Container may already exist"
+    container start test-logger 2>/dev/null || true
 }
 
 echo ""
