@@ -81,6 +81,9 @@ func (gui *Gui) keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("containers", 'e', gocui.ModNone, gui.handleContainerExec); err != nil {
 		return err
 	}
+	if err := g.SetKeybinding("containers", ' ', gocui.ModNone, gui.handleToggleContainerSelection); err != nil {
+		return err
+	}
 	if err := g.SetKeybinding("containers", 'a', gocui.ModNone, gui.handleToggleShowAll); err != nil {
 		return err
 	}
@@ -434,6 +437,58 @@ func (gui *Gui) handleContainerStart(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (gui *Gui) handleContainerStop(g *gocui.Gui, v *gocui.View) error {
+	// Check if there are selected items
+	selectedItems := gui.Panels.Containers.GetSelectedItems()
+	
+	if len(selectedItems) > 0 {
+		// Bulk stop - filter to only running containers
+		var runningContainers []*commands.Container
+		for _, container := range selectedItems {
+			if container.IsRunning() {
+				runningContainers = append(runningContainers, container)
+			}
+		}
+
+		if len(runningContainers) == 0 {
+			gui.setStatus("No running containers selected")
+			return nil
+		}
+
+		confirmMsg := fmt.Sprintf("Stop %d container(s)?", len(runningContainers))
+		return gui.createConfirmationPanel(
+			gui.Tr.Confirm,
+			confirmMsg,
+			func(g *gocui.Gui, v *gocui.View) error {
+				gui.setStatus(fmt.Sprintf("Stopping %d containers...", len(runningContainers)))
+
+				go func() {
+					var stopErr error
+					for _, container := range runningContainers {
+						if err := gui.ContainerCommand.StopContainer(container.GetID()); err != nil {
+							stopErr = err
+							break
+						}
+					}
+
+					gui.g.Update(func(g *gocui.Gui) error {
+						if stopErr != nil {
+							gui.setStatus(fmt.Sprintf("Error: %v", stopErr))
+						} else {
+							gui.setStatus(fmt.Sprintf("Stopped %d containers", len(runningContainers)))
+							gui.Panels.Containers.ClearSelection()
+							gui.refresh()
+						}
+						return nil
+					})
+				}()
+
+				return nil
+			},
+			nil,
+		)
+	}
+
+	// Single stop (existing behavior)
 	container, err := gui.Panels.Containers.GetSelectedItem()
 	if err != nil {
 		return nil
@@ -470,6 +525,54 @@ func (gui *Gui) handleContainerStop(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (gui *Gui) handleContainerDelete(g *gocui.Gui, v *gocui.View) error {
+	// Check if there are selected items
+	selectedItems := gui.Panels.Containers.GetSelectedItems()
+	
+	if len(selectedItems) > 0 {
+		// Bulk delete
+		// Check if all selected are stopped
+		for _, container := range selectedItems {
+			if container.IsRunning() {
+				gui.setStatus("Stop all containers before deleting")
+				return nil
+			}
+		}
+
+		confirmMsg := fmt.Sprintf("Delete %d containers?", len(selectedItems))
+		return gui.createConfirmationPanel(
+			gui.Tr.Confirm,
+			confirmMsg,
+			func(g *gocui.Gui, v *gocui.View) error {
+				gui.setStatus(fmt.Sprintf("Deleting %d containers...", len(selectedItems)))
+
+				go func() {
+					var deleteErr error
+					for _, container := range selectedItems {
+						if err := gui.ContainerCommand.DeleteContainer(container.GetID()); err != nil {
+							deleteErr = err
+							break
+						}
+					}
+
+					gui.g.Update(func(g *gocui.Gui) error {
+						if deleteErr != nil {
+							gui.setStatus(fmt.Sprintf("Error: %v", deleteErr))
+						} else {
+							gui.setStatus(fmt.Sprintf("Deleted %d containers", len(selectedItems)))
+							gui.Panels.Containers.ClearSelection()
+							gui.refresh()
+						}
+						return nil
+					})
+				}()
+
+				return nil
+			},
+			nil,
+		)
+	}
+
+	// Single delete (existing behavior)
 	container, err := gui.Panels.Containers.GetSelectedItem()
 	if err != nil {
 		return nil
@@ -664,6 +767,28 @@ func (gui *Gui) handleContainerExec(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	gui.refresh()
+	return nil
+}
+
+func (gui *Gui) handleToggleContainerSelection(g *gocui.Gui, v *gocui.View) error {
+	if err := gui.Panels.Containers.ToggleSelection(); err != nil {
+		gui.setStatus(fmt.Sprintf("Error: %v", err))
+		return nil
+	}
+
+	count := gui.Panels.Containers.GetSelectedCount()
+	if count > 0 {
+		gui.setStatus(fmt.Sprintf("Selected: %d container(s)", count))
+	} else {
+		gui.setStatus("")
+	}
+
+	// Move to next item after toggling
+	gui.Panels.Containers.SelectNextLine()
+	if err := gui.Panels.Containers.HandleSelect(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

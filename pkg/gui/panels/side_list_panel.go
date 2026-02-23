@@ -59,6 +59,11 @@ type SideListPanel[T comparable] struct {
 
 	// This can be nil if you want to always show the panel
 	Hide func() bool
+
+	// Multi-select state: maps item ID to selection status
+	selectedItems map[string]bool
+	// Function to get ID from item (required for multi-select)
+	GetItemID func(T) string
 }
 
 var _ ISideListPanel = &SideListPanel[int]{}
@@ -272,4 +277,78 @@ func (self *SideListPanel[T]) IsHidden() bool {
 	}
 
 	return self.Hide()
+}
+
+// Multi-select methods
+
+// ToggleSelection toggles the selection state of the item at the current index
+func (self *SideListPanel[T]) ToggleSelection() error {
+	if self.GetItemID == nil {
+		return nil // Multi-select not enabled for this panel
+	}
+
+	item, err := self.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	id := self.GetItemID(item)
+	if self.selectedItems == nil {
+		self.selectedItems = make(map[string]bool)
+	}
+
+	self.selectedItems[id] = !self.selectedItems[id]
+	return nil
+}
+
+// IsItemSelected returns true if the item at the given index is selected
+func (self *SideListPanel[T]) IsItemSelected(idx int) bool {
+	if self.GetItemID == nil || self.selectedItems == nil {
+		return false
+	}
+
+	item, ok := self.List.TryGet(idx)
+	if !ok {
+		return false
+	}
+
+	id := self.GetItemID(item)
+	return self.selectedItems[id]
+}
+
+// GetSelectedCount returns the number of selected items
+func (self *SideListPanel[T]) GetSelectedCount() int {
+	if self.selectedItems == nil {
+		return 0
+	}
+
+	count := 0
+	for _, selected := range self.selectedItems {
+		if selected {
+			count++
+		}
+	}
+	return count
+}
+
+// GetSelectedItems returns all selected items
+func (self *SideListPanel[T]) GetSelectedItems() []T {
+	if self.selectedItems == nil || self.GetItemID == nil {
+		return nil
+	}
+
+	var selected []T
+	for i := 0; i < self.List.Len(); i++ {
+		if self.IsItemSelected(i) {
+			if item, ok := self.List.TryGet(i); ok {
+				selected = append(selected, item)
+			}
+		}
+	}
+	return selected
+}
+
+// ClearSelection removes all selections
+func (self *SideListPanel[T]) ClearSelection() {
+	self.selectedItems = make(map[string]bool)
 }
