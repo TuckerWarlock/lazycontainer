@@ -74,6 +74,8 @@ type Gui struct {
 	Panels      Panels
 	State       guiState
 	taskManager *tasks.TaskManager
+	CurrentTheme *presentation.Theme
+	MouseEnabled bool
 
 	statusMessage        string
 	lastRefresh          time.Time
@@ -103,6 +105,8 @@ func NewGui(log *logrus.Entry, containerCmd *commands.ContainerCommand, osCmd *c
 		Tr:               tr,
 		State:            initialState,
 		taskManager:      tasks.NewTaskManager(log, tr),
+		CurrentTheme:     presentation.ThemeDefault,
+		MouseEnabled:     config.UserConfig.Gui.MouseEvents,
 	}
 
 	return gui, nil
@@ -121,7 +125,7 @@ func (gui *Gui) Run() error {
 	defer g.Close()
 
 	gui.g = g
-	g.Mouse = true
+	g.Mouse = gui.MouseEnabled
 	g.Highlight = true
 	g.SelFgColor = gocui.ColorGreen
 	g.SelFrameColor = gocui.ColorGreen
@@ -207,7 +211,7 @@ func (gui *Gui) getContainersPanel() *panels.SideListPanel[*commands.Container] 
 		},
 		NoItemsMessage: gui.Tr.NoContainers,
 		Gui:            gui,
-		GetTableCells:  presentation.GetContainerDisplayStrings,
+		GetTableCells:  gui.GetContainerDisplayStringsThemedWrapper,
 		GetItemID: func(c *commands.Container) string {
 			return c.GetID()
 		},
@@ -1018,4 +1022,9 @@ func (gui *Gui) resetMainView() {
 func (gui *Gui) ResetOrigin(v *gocui.View) {
 	_ = v.SetOrigin(0, 0)
 	_ = v.SetCursor(0, 0)
+}
+
+// GetContainerDisplayStringsThemedWrapper wraps the themed container display function for use in panels
+func (gui *Gui) GetContainerDisplayStringsThemedWrapper(container *commands.Container) []string {
+	return presentation.GetContainerDisplayStringsWithTheme(container, gui.CurrentTheme)
 }

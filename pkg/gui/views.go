@@ -25,6 +25,7 @@ type Views struct {
 	// popups
 	Confirmation *gocui.View
 	Menu         *gocui.View
+	Help         *gocui.View
 
 	// error view for insufficient space
 	Limit *gocui.View
@@ -57,6 +58,7 @@ func (gui *Gui) orderedViewNameMappings() []viewNameMapping {
 		// Popups (order matters - later items render on top)
 		{viewPtr: &gui.Views.Menu, name: "menu", autoPosition: false},
 		{viewPtr: &gui.Views.Confirmation, name: "confirmation", autoPosition: false},
+		{viewPtr: &gui.Views.Help, name: "help", autoPosition: false},
 
 		// Full-screen error view
 		{viewPtr: &gui.Views.Limit, name: "limit", autoPosition: true},
@@ -135,6 +137,9 @@ func (gui *Gui) initializeViews() error {
 
 	gui.Views.Menu.Visible = false
 	gui.Views.Menu.SelBgColor = selectedLineBgColor
+
+	gui.Views.Help.Visible = false
+	gui.Views.Help.Wrap = true
 
 	// Configure error view
 	gui.Views.Limit.Visible = false

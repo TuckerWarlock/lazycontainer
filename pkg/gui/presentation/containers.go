@@ -1,26 +1,35 @@
 package presentation
 
 import (
-	"github.com/fatih/color"
 	"github.com/warl0ck/lazycontainer/pkg/commands"
 	"github.com/warl0ck/lazycontainer/pkg/utils"
 )
 
-// GetContainerDisplayStrings returns the display strings for a container
+// GetContainerDisplayStrings returns the display strings for a container using the default theme
 func GetContainerDisplayStrings(container *commands.Container) []string {
+	return GetContainerDisplayStringsWithTheme(container, ThemeDefault)
+}
+
+// GetContainerDisplayStringsWithTheme returns the display strings for a container with a specific theme
+func GetContainerDisplayStringsWithTheme(container *commands.Container, theme *Theme) []string {
 	return []string{
-		getContainerDisplayStatus(container),
+		getContainerDisplayStatusWithTheme(container, theme),
 		container.GetName(),
 		getContainerIPOrUptime(container),
-		utils.ColoredString(container.GetPorts(), color.FgYellow),
-		utils.ColoredString(getShortImage(container.GetImage()), color.FgMagenta),
+		utils.ColoredString(container.GetPorts(), theme.GetPortsColor()),
+		utils.ColoredString(getShortImage(container.GetImage()), theme.GetImageColor()),
 	}
 }
 
 // getContainerDisplayStatus returns the colored status indicator
 func getContainerDisplayStatus(c *commands.Container) string {
+	return getContainerDisplayStatusWithTheme(c, ThemeDefault)
+}
+
+// getContainerDisplayStatusWithTheme returns the colored status indicator with a specific theme
+func getContainerDisplayStatusWithTheme(c *commands.Container, theme *Theme) string {
 	symbol := c.GetStatusSymbol()
-	return utils.ColoredString(symbol, getContainerColor(c))
+	return utils.ColoredString(symbol, theme.GetContainerStatusColor(c.GetStatus()))
 }
 
 // getContainerIPOrUptime returns IP address for running containers, or status for stopped
@@ -55,20 +64,4 @@ func getShortImage(image string) string {
 		return image[:22] + "..."
 	}
 	return image
-}
-
-// getContainerColor returns the color attribute for a container based on its state
-func getContainerColor(c *commands.Container) color.Attribute {
-	switch c.GetStatus() {
-	case "running":
-		return color.FgGreen
-	case "stopped", "exited":
-		return color.FgRed
-	case "paused":
-		return color.FgYellow
-	case "created":
-		return color.FgCyan
-	default:
-		return color.FgWhite
-	}
 }
