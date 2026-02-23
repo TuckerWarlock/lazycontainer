@@ -6,6 +6,8 @@ import (
 	"github.com/jesseduffield/gocui"
 	"github.com/warl0ck/lazycontainer/pkg/commands"
 	"github.com/warl0ck/lazycontainer/pkg/gui/panels"
+	"github.com/warl0ck/lazycontainer/pkg/gui/presentation"
+	"github.com/warl0ck/lazycontainer/pkg/utils"
 )
 
 func (gui *Gui) keybindings(g *gocui.Gui) error {
@@ -49,6 +51,21 @@ func (gui *Gui) keybindings(g *gocui.Gui) error {
 		return err
 	}
 	if err := g.SetKeybinding("", '4', gocui.ModNone, gui.focusNetworksPanel); err != nil {
+		return err
+	}
+
+	// Theme toggle (global)
+	if err := g.SetKeybinding("", 't', gocui.ModNone, gui.handleCycleTheme); err != nil {
+		return err
+	}
+
+	// Help panel (global)
+	if err := g.SetKeybinding("", '?', gocui.ModNone, gui.handleShowHelp); err != nil {
+		return err
+	}
+
+	// Mouse toggle (global)
+	if err := g.SetKeybinding("", 'm', gocui.ModNone, gui.handleToggleMouse); err != nil {
 		return err
 	}
 
@@ -121,6 +138,19 @@ func (gui *Gui) keybindings(g *gocui.Gui) error {
 		return err
 	}
 	if err := g.SetKeybinding("filter", gocui.KeyEsc, gocui.ModNone, gui.handleEscapeFilter); err != nil {
+		return err
+	}
+
+	// Copy to clipboard keybindings (global for all side panels)
+	for _, panel := range gui.allSidePanels() {
+		viewName := panel.GetView().Name()
+		if err := g.SetKeybinding(viewName, 'c', gocui.ModNone, gui.handleCopyResourceID); err != nil {
+			return err
+		}
+	}
+
+	// Copy logs keybinding (for main panel)
+	if err := g.SetKeybinding("", 'C', gocui.ModNone, gui.handleCopyLogs); err != nil {
 		return err
 	}
 
@@ -829,4 +859,126 @@ func (gui *Gui) handleCommitFilter(g *gocui.Gui, v *gocui.View) error {
 
 func (gui *Gui) handleEscapeFilter(g *gocui.Gui, v *gocui.View) error {
 	return gui.escapeFilterPrompt()
+}
+
+// Copy handlers
+
+func (gui *Gui) handleCopyResourceID(g *gocui.Gui, v *gocui.View) error {
+	if v == nil {
+		return nil
+	}
+
+	var textToCopy string
+
+	switch v.Name() {
+	case "containers":
+		container, err := gui.Panels.Containers.GetSelectedItem()
+		if err != nil {
+			gui.setStatus("No container selected")
+			return nil
+		}
+		textToCopy = container.GetID()
+
+	case "images":
+		image, err := gui.Panels.Images.GetSelectedItem()
+		if err != nil {
+			gui.setStatus("No image selected")
+			return nil
+		}
+		textToCopy = image.Reference
+
+	case "volumes":
+		volume, err := gui.Panels.Volumes.GetSelectedItem()
+		if err != nil {
+			gui.setStatus("No volume selected")
+			return nil
+		}
+		textToCopy = volume.Name
+
+	case "networks":
+		network, err := gui.Panels.Networks.GetSelectedItem()
+		if err != nil {
+			gui.setStatus("No network selected")
+			return nil
+		}
+		textToCopy = network.ID
+
+	default:
+		gui.setStatus("Copy not available for this panel")
+		return nil
+	}
+
+	if textToCopy == "" {
+		gui.setStatus("Nothing to copy")
+		return nil
+	}
+
+	if err := utils.CopyToClipboard(textToCopy); err != nil {
+		gui.setStatus(fmt.Sprintf("Copy failed: %v", err))
+		return nil
+	}
+
+	gui.setStatus(fmt.Sprintf("Copied: %s", textToCopy))
+	return nil
+}
+
+func (gui *Gui) handleCopyLogs(g *gocui.Gui, v *gocui.View) error {
+	if gui.Views.Main == nil {
+		gui.setStatus("No logs to copy")
+		return nil
+	}
+
+	content := gui.Views.Main.Buffer()
+	if content == "" {
+		gui.setStatus("No content to copy")
+		return nil
+	}
+
+	if err := utils.CopyToClipboard(content); err != nil {
+		gui.setStatus(fmt.Sprintf("Copy failed: %v", err))
+		return nil
+	}
+
+	gui.setStatus("Logs copied to clipboard")
+	return nil
+}
+
+// Theme handler
+
+func (gui *Gui) handleCycleTheme(g *gocui.Gui, v *gocui.View) error {
+	themes := presentation.AllThemes()
+	currentIdx := 0
+
+	for i, theme := range themes {
+		if theme.Name == gui.CurrentTheme.Name {
+			currentIdx = i
+			break
+		}
+	}
+
+	nextIdx := (currentIdx + 1) % len(themes)
+	gui.CurrentTheme = themes[nextIdx]
+	gui.setStatus(fmt.Sprintf("Theme: %s", gui.CurrentTheme.Name))
+	gui.refresh()
+	return nil
+}
+
+// Help handler
+
+func (gui *Gui) handleShowHelp(g *gocui.Gui, v *gocui.View) error {
+	return gui.createHelpPanel()
+}
+
+// Mouse handler
+
+func (gui *Gui) handleToggleMouse(g *gocui.Gui, v *gocui.View) error {
+	gui.MouseEnabled = !gui.MouseEnabled
+	gui.g.Mouse = gui.MouseEnabled
+
+	status := "off"
+	if gui.MouseEnabled {
+		status = "on"
+	}
+	gui.setStatus(fmt.Sprintf("Mouse: %s", status))
+	return nil
 }

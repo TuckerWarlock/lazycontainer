@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"math"
+	"os/exec"
 	"regexp"
 	"sort"
 	"strings"
@@ -264,4 +265,11 @@ func SafeTruncate(str string, limit int) string {
 // OpensMenuStyle used on menu items that open another menu
 func OpensMenuStyle(str string) string {
 	return ColoredString(fmt.Sprintf("%s...", str), color.FgMagenta)
+}
+
+// CopyToClipboard copies the given string to the system clipboard using pbcopy
+func CopyToClipboard(text string) error {
+	cmd := exec.Command("pbcopy")
+	cmd.Stdin = strings.NewReader(text)
+	return cmd.Run()
 }

@@ -127,6 +127,11 @@ Global keybindings (see `keybindings.go`):
 - `f` — Follow logs (streaming)
 - `e` — Exec interactive shell
 - `v` — Stream live stats
+- `c` — Copy resource ID to clipboard
+- `C` — Copy logs to clipboard
+- `t` — Cycle themes (default/light/dark)
+- `?` — Show context-sensitive help
+- `m` — Toggle mouse support (useful for tmux)
 - `q` — Quit
 
 Resource-specific keybindings can be added in panel handlers.
@@ -157,11 +162,20 @@ lazydocker (`/Users/warl0ck/Code/lazydocker/`) is the reference implementation. 
 
 ## Implementation Status
 
-See `docs/IMPLEMENTATION.md` for detailed feature parity with lazydocker. Core features (phases 1–2) are complete:
+See `docs/IMPLEMENTATION.md` for detailed feature parity with lazydocker. 
+
+**Phase 1–2 (Core & Interactive)**: Complete ✅
 - Container/image/volume/network management
 - Interactive shell access
 - Streaming logs and stats
 - Real-time filtering and bulk operations
 - Confirmation dialogs
 
-Phase 3 features (custom commands, menu system, config file) are pending.
+**Phase 3 (User Experience)**: Not implemented
+- Custom commands, menu system, config file
+
+**Phase 4 (Polish)**: Complete ✅
+- Copy to clipboard (`c`, `C`)
+- Theme customization (`t` cycles 3 themes)
+- Context-sensitive help (`?`)
+- Mouse mode toggle (`m` for tmux compatibility)

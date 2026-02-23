@@ -165,3 +165,11 @@ func TestRenderTable(t *testing.T) {
 		t.Error("RenderTable mismatched rows should return error")
 	}
 }
+
+func TestCopyToClipboard(t *testing.T) {
+testString := "test-container-id"
+err := CopyToClipboard(testString)
+if err != nil {
+t.Errorf("CopyToClipboard failed: %v", err)
+}
+}
