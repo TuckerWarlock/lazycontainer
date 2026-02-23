@@ -30,3 +30,7 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Binary for CLI tool
+lazycontainer
+**/lazycontainer
