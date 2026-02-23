@@ -1,174 +1,111 @@
-# Lazycontainer Implementation Plan
+# Lazycontainer Implementation Status
 
-A TUI for Apple's Containerization framework (macOS 26+), adapted from lazydocker.
+A TUI for Apple's Containerization framework (macOS 26+), adapted from [lazydocker](https://github.com/jesseduffield/lazydocker).
+
+---
 
 ## Current Status
 
-### Completed
+### Phases Complete
 
-1. **Basic TUI working** - Container list, details panel, keybindings functional
-2. **Core structure created**:
-   - `main.go` - Entry point with CLI flags
-   - `pkg/app/app.go` - Application wiring
-   - `pkg/config/app_config.go` - Configuration
-   - `pkg/commands/os.go` - OS command execution
-   - `pkg/commands/container.go` - Apple container CLI wrapper
-   - `pkg/commands/container_types.go` - Container, Image, Volume, Network structs with helper methods
-   - `pkg/gui/gui.go` - Full TUI with panels system and IGui interface
-   - `pkg/gui/views.go` - Views struct with all gocui views
-   - `pkg/gui/keybindings.go` - Keybindings with mouse support
-   - `pkg/i18n/english.go` - Translations
-   - `pkg/i18n/i18n.go` - Translation loader
-   - `pkg/tasks/tasks.go` - Task management for async operations
-   - `pkg/gui/types/types.go` - MenuItem type
-
-3. **Panel Infrastructure** (`pkg/gui/panels/`):
-   - `filtered_list.go` - Generic filtered list with sorting
-   - `list_panel.go` - Base list panel with selection
-   - `context_state.go` - Tab management for main panel
-   - `side_list_panel.go` - Main reusable panel component
-
-4. **Presentation Layer** (`pkg/gui/presentation/`):
-   - `containers.go` - Container display with colored status indicators
-   - `images.go` - Image display formatter
-   - `volumes.go` - Volume display formatter
-   - `networks.go` - Network display formatter
-
-5. **Utility Functions** (`pkg/utils/utils.go`):
-   - `Clamp`, `RenderTable`, `ColoredString`, `WithPadding`
-   - `SplitLines`, `FormatBinaryBytes`, `FormatDecimalBytes`
-
-6. **Container Operations**:
-   - List containers (all/running)
-   - Start/Stop/Delete containers
-   - View container logs (with `-n` flag for Apple CLI)
-   - View container config/inspect
-   - Kill container with signal
-
-7. **Image Operations**:
-   - List images
-   - Pull images
-   - Delete images
-
-8. **Volume Operations**:
-   - List volumes
-   - Create volumes
-   - Delete volumes
-
-9. **Network Operations**:
-   - List networks
-   - Create networks
-   - Delete networks
-
-10. **Navigation**:
-    - j/k or arrow keys for list navigation
-    - 1/2/3/4 keys for panel switching
-    - Tab cycling through panels
-    - Mouse wheel scrolling
-    - [ ] for main tab switching
-    - Enter, s, d, x keybindings for actions
-
-11. **Testing Infrastructure**:
-    - `pkg/commands/container_test.go` - Unit tests for JSON parsing
-    - `scripts/test_setup.sh` - Script to create test containers
-
-### Partially Implemented
-
-1. **Stats View** - Framework in place but `container stats --format json` parsing not complete
+**Phase 1 — Core TUI** ✅
+**Phase 2 — Interactive Features** ✅
+**Testing Infrastructure** ✅
 
 ---
 
-## Comparison with Lazydocker: Missing Features
+## Lazydocker Feature Parity
 
-The following features exist in lazydocker but are NOT yet implemented in lazycontainer:
-
-### High Priority - Core Functionality
-
-#### 1. Confirmation Dialogs (`pkg/gui/confirmation_panel.go`)
-- Modal confirmation before destructive actions (delete, stop, prune)
-- lazydocker uses `CreateConfirmationPanel()` and `CreateMenu()`
-- **Status:** Implemented - y/Enter confirms, n/Esc cancels
-
-#### 2. Filtering System (`pkg/gui/filtering.go`)
-- `/` to enter filter mode
-- Real-time filtering of panel lists
-- Filter indicator in view title
-- **Status:** Implemented - `/` opens filter, Enter commits, Esc cancels
-
-#### 3. Custom Commands (`pkg/config/user_config.go`)
-- User-defined commands per resource type
-- Template variables (`{{.Container.ID}}`, etc.)
-- Custom keybindings for commands
-- **Status:** Not implemented
-
-#### 4. Status Manager (`pkg/gui/status_manager.go`)
-- Bottom status line with messages
-- Error display with colors
-- Loading indicators
-- **Status:** Basic implementation complete (uses options bar, no animated spinner)
-
-### Medium Priority - User Experience
-
-#### 5. Container Attach/Exec (`pkg/commands/container.go`)
-- Interactive shell into container
-- lazydocker: `docker exec -it container /bin/sh`
-- Apple CLI equivalent: `container exec <id> -- /bin/sh`
-- **Status:** Not implemented
-
-#### 6. Subprocess/PTY Support (`pkg/gui/sub_process.go`)
-- Running interactive commands (attach, exec, logs -f)
-- Terminal passthrough with proper PTY handling
-- **Status:** Not implemented - required for attach/exec
-
-#### 7. Bulk Operations (`pkg/gui/bulk_actions.go`)
-- Select multiple items with space
-- Perform action on all selected
-- "Prune" operations (remove all stopped, dangling, etc.)
-- **Status:** Not implemented
-
-#### 8. Container Top (`pkg/commands/container.go`)
-- Show running processes in container
-- lazydocker: `docker top`
-- Apple CLI: Need to investigate if supported
-- **Status:** Not implemented
-
-### Lower Priority - Polish
-
-#### 9. Information Panel (`pkg/gui/information_panel.go`)
-- Bottom bar showing version, help hints
-- Context-sensitive help
-- **Status:** View exists but not populated
-
-#### 10. Menu System (`pkg/gui/menu_panel.go`)
-- Popup menus for complex choices
-- E.g., signal selection for kill, restart policies
-- **Status:** Types exist but UI not implemented
-
-#### 11. Options View (`pkg/gui/options.go`)
-- Show keybindings for current context
-- Dynamic based on selected item type
-- **Status:** View exists but not populated
-
-#### 12. Config File Support (`pkg/config/`)
-- `~/.config/lazycontainer/config.yml`
-- Custom themes, keybindings, commands
-- **Status:** Basic config exists but not user-configurable
-
-#### 13. Mouse Mode Toggle
-- Option to disable mouse (for tmux compatibility)
-- **Status:** Not implemented
-
-#### 14. Scrolling in Main Panel
-- PgUp/PgDown, mouse wheel in main content
-- **Status:** Basic scrolling exists but may need refinement
-
-#### 15. Copy to Clipboard
-- Copy container ID, logs, etc.
-- **Status:** Not implemented
+| Feature | lazydocker | lazycontainer | Notes |
+|---------|-----------|---------------|-------|
+| Container list | ✅ | ✅ | |
+| Start / Stop / Delete | ✅ | ✅ | |
+| Container logs (static) | ✅ | ✅ | Uses `-n` not `--tail` |
+| Container inspect/config | ✅ | ✅ | |
+| Kill with signal | ✅ | ✅ | |
+| Follow logs (`-f`) | ✅ | ✅ | 'f' keybinding |
+| Exec / interactive shell | ✅ | ✅ | 'e' keybinding; `container exec <id> -- /bin/sh` |
+| Streaming stats | ✅ | ✅ | 'v' keybinding; different JSON format |
+| Bulk operations | ✅ | ✅ | Space to select; 's'/'d' for bulk stop/delete |
+| Filtering (`/`) | ✅ | ✅ | Real-time filtering |
+| Confirmation dialogs | ✅ | ✅ | y/Enter to confirm, n/Esc to cancel |
+| Status bar | ✅ | ✅ | Basic — no animated spinner |
+| Image list / delete | ✅ | ✅ | |
+| Image pull | ✅ | ✅ | |
+| Volume list / create / delete | ✅ | ✅ | |
+| Network list / create / delete | ✅ | ✅ | |
+| Panel navigation (1/2/3/4) | ✅ | ✅ | |
+| Tab cycling ([/]) | ✅ | ✅ | logs / config / stats tabs |
+| Mouse support | ✅ | ✅ | Click to select, scroll |
+| Custom commands | ✅ | ❌ | Phase 3 |
+| Menu system | ✅ | ❌ | Phase 3 |
+| Options view (keybinding help) | ✅ | ❌ | Phase 3 |
+| Config file (`~/.config/`) | ✅ | ❌ | Phase 3 |
+| Copy to clipboard | ✅ | ❌ | Phase 4 |
+| Container top | ✅ | ❌ | Needs investigation — Apple CLI may not support |
+| Docker Compose / Services | ✅ | N/A | Apple containers have no compose equivalent |
+| SSH tunneling | ✅ | N/A | Local containers only |
 
 ---
 
-## Apple Container CLI Commands Reference
+## What's Different from lazydocker
+
+### Apple Container CLI vs Docker CLI
+
+| Operation | Docker | Apple Container |
+|-----------|--------|-----------------|
+| Log tail | `--tail N` | `-n N` |
+| Timestamp format | Unix epoch | CFAbsoluteTime (seconds since Jan 1, 2001) |
+| Exec | `docker exec -it` | `container exec <id> -- cmd` |
+| No compose | `docker-compose` | N/A |
+
+### Architecture Differences
+
+1. **No Docker Compose** — No Services/Projects panels
+2. **No SSH tunneling** — Local containers only; no remote support
+3. **Different stats JSON** — Apple's format uses `cpuUsageUsec`, `memoryUsageBytes`, etc.
+4. **CFAbsoluteTime** — Timestamps are seconds since Jan 1, 2001 (not Unix epoch)
+
+---
+
+## Implementation Roadmap
+
+### Phase 1: Core TUI ✅
+- [x] Container, image, volume, network panels
+- [x] Start / stop / delete operations
+- [x] Logs and config tabs
+- [x] Filtering (`/` to filter)
+- [x] Confirmation dialogs
+- [x] Status bar
+- [x] Mouse support
+
+### Phase 2: Interactive Features ✅
+- [x] Streaming logs — `f` key, `container logs <id> -f`
+- [x] Container exec/attach — `e` key, `container exec <id> -- /bin/sh`
+- [x] Bulk operations — Space to multi-select, `s`/`d` for bulk actions
+- [x] Streaming stats — `v` key, `container stats <id> --format json`
+
+### Testing Infrastructure ✅
+- [x] 32 unit tests across `pkg/commands`, `pkg/gui/panels`, `pkg/gui/presentation`, `pkg/utils`
+- [x] `go vet` in CI
+- [x] `scripts/test_setup.sh` for integration test environment
+- [x] Manual test scenarios documented in `docs/TESTING.md`
+
+### Phase 3: User Experience
+- [ ] Config file (`~/.config/lazycontainer/config.yml`) — custom themes, keybindings
+- [ ] Custom commands per resource type with template variables
+- [ ] Menu system for complex choices (signal selection, etc.)
+- [ ] Options view showing available keybindings in context
+
+### Phase 4: Polish
+- [ ] Information panel with context-sensitive help
+- [ ] Copy to clipboard (container ID, logs)
+- [ ] Mouse mode toggle (for tmux compatibility)
+- [ ] Theme customization
+
+---
+
+## Apple Container CLI Reference
 
 ```bash
 # List containers
@@ -180,9 +117,11 @@ container start <id>
 container stop <id>
 container delete <id>
 container logs <id> -n <lines>        # Note: -n not --tail
+container logs <id> -f -n <lines>     # Follow
 container inspect --format json <id>
 container kill <id> --signal <signal>
 container exec <id> -- <command>      # Interactive execution
+container stats <id> --format json    # Streaming stats
 
 # Images
 container image list --format json
@@ -205,255 +144,78 @@ container system start
 container system stop
 ```
 
-## Key Architectural Differences from Lazydocker
-
-1. **No Docker Compose** - Apple containers don't have compose, so no Services/Project panels
-2. **No SSH tunneling** - Local containers only
-3. **Simpler stats** - Container stats may have different format
-4. **No container attach** - May need to implement differently via `container exec`
-5. **Different timestamp format** - Apple uses CFAbsoluteTime (seconds since Jan 1, 2001)
-6. **Different CLI flags** - `-n` instead of `--tail` for logs
+---
 
 ## Directory Structure
 
 ```
-/Users/warl0ck/Code/lazycontainer/
+lazycontainer/
 ├── main.go
-├── go.mod
-├── go.sum
-├── IMPLEMENTATION_PLAN.md
+├── go.mod / go.sum
+├── docs/
+│   ├── IMPLEMENTATION.md     ← this file
+│   └── TESTING.md
 ├── scripts/
-│   └── test_setup.sh           # Test infrastructure setup
+│   └── test_setup.sh         # Creates test containers/volumes/networks
 ├── pkg/
-│   ├── app/
-│   │   └── app.go
+│   ├── app/app.go            # Application wiring
 │   ├── commands/
-│   │   ├── os.go
-│   │   ├── container.go
+│   │   ├── container.go      # Apple container CLI wrapper
 │   │   ├── container_types.go
-│   │   └── container_test.go
-│   ├── config/
-│   │   └── app_config.go
+│   │   ├── container_test.go # 7 unit tests
+│   │   └── os.go
+│   ├── config/app_config.go
 │   ├── gui/
-│   │   ├── gui.go
-│   │   ├── views.go
-│   │   ├── keybindings.go
+│   │   ├── gui.go            # Main GUI struct, run loop, refresh
+│   │   ├── views.go          # gocui view definitions
+│   │   ├── keybindings.go    # Keyboard/mouse bindings
+│   │   ├── subprocess.go     # PTY subprocess runner (logs/exec/stats)
 │   │   ├── panels/
-│   │   │   ├── filtered_list.go
-│   │   │   ├── list_panel.go
-│   │   │   ├── context_state.go
-│   │   │   └── side_list_panel.go
+│   │   │   ├── filtered_list.go       # Generic filtered/sorted list (6 tests)
+│   │   │   ├── list_panel.go          # Base navigation (3 tests)
+│   │   │   ├── context_state.go       # Tab management
+│   │   │   └── side_list_panel.go     # Main panel + multi-select (5 tests)
 │   │   ├── presentation/
-│   │   │   ├── containers.go
+│   │   │   ├── containers.go          # (3 tests)
 │   │   │   ├── images.go
 │   │   │   ├── volumes.go
 │   │   │   └── networks.go
-│   │   └── types/
-│   │       └── types.go
+│   │   └── types/types.go
 │   ├── i18n/
-│   │   ├── i18n.go
-│   │   └── english.go
-│   ├── log/
-│   │   └── log.go
-│   ├── tasks/
-│   │   └── tasks.go
-│   └── utils/
-│       └── utils.go
+│   ├── tasks/tasks.go        # Async task management
+│   └── utils/utils.go        # Formatting utilities (8 tests)
 ```
 
-## Implementation Roadmap
-
-### Phase 1: Core Polish (Current)
-- [x] Fix mouse selection highlight behavior
-- [x] Add confirmation dialogs for destructive actions
-- [x] Implement status bar with error/info messages
-- [x] Connect filtering UI to panel infrastructure
-
-### Phase 2: Interactive Features
-
-#### Streaming Logs ✅ COMPLETE
-Implement real-time log following using `container logs -f`.
-
-**Status:** Implemented and tested
-
-**Architecture:**
-- New `pkg/gui/subprocess.go`: Handles foreground subprocess execution
-  - `runSubprocess()`: Main entry point with GUI suspension
-  - `runCommand()`: Runs process with signal handling
-  - `promptToReturn()`: Waits for user input before resuming
-- `pkg/commands/container.go`: Added `GetContainerLogsStream()` to build streaming exec.Cmd
-- `pkg/commands/os.go`: Added `BuildCommand()` to create unexecuted commands
-- `pkg/gui/keybindings.go`: Added 'f' keybinding and `handleFollowLogs()` handler
-- `pkg/gui/gui.go`: Added `PauseBackgroundTasks` flag to pause refresh during subprocess
-
-**Implementation:**
-- Suspend gocui → run `container logs <id> -f` in foreground → resume gocui
-- Uses proven pattern from lazydocker
-- Proper signal handling (Ctrl+C stops logs, returns to UI)
-- PTY passthrough for natural terminal interaction
-
-**Usage:** Select a container, press 'f' to follow logs in real-time
-
-**Testing:**
-- Command construction verified in unit tests
-- All tests pass: `go test ./pkg/commands`
-- Verified `-f` flag availability in container CLI
-
 ---
 
-#### Container Exec/Attach ✅ COMPLETE
-Implement interactive shell access to running containers using `container exec <id> -- /bin/sh`.
-
-**Status:** Implemented and tested
-
-**Architecture:**
-- `pkg/commands/container.go`: Added `GetContainerExec(id, cmd string) *exec.Cmd`
-  - Builds: `container exec <id> -- <cmd>` (defaults to `/bin/sh`)
-  - Returns unexecuted command for subprocess runner
-- `pkg/gui/keybindings.go`: 
-  - Added 'e' keybinding in containers panel
-  - Added `handleContainerExec()` handler
-  - Validation: only runs on **running** containers
-- Reuses subprocess infrastructure from streaming logs
-
-**Implementation:**
-- Suspend gocui → run `container exec <id> -- /bin/sh` in foreground → resume gocui
-- Full interactive terminal: stdin/stdout/stderr passthrough
-- Ctrl+C terminates shell and returns to UI
-- Error handling: shows status message if container not running
-
-**Usage:** Select a running container, press 'e' to open interactive shell
-
-**Testing:**
-- Unit tests: command construction with default and custom commands
-- All tests pass: `go test ./pkg/commands`
-- Build verified: `go build -o lazycontainer .`
-
----
-
-#### Bulk Operations ✅ COMPLETE
-Multi-select containers and perform batch actions (delete, stop).
-
-**Status:** Implemented and tested
-
-**Architecture:**
-- `pkg/gui/panels/side_list_panel.go`:
-  - Added `selectedItems` map for tracking selections by ID
-  - Added `GetItemID` function parameter for ID extraction
-  - Added selection methods: `ToggleSelection()`, `GetSelectedCount()`, `GetSelectedItems()`, `ClearSelection()`
-- `pkg/gui/keybindings.go`:
-  - Added Space keybinding for toggle selection
-  - Modified `handleContainerDelete()` and `handleContainerStop()` for bulk operations
-  - Added `handleToggleContainerSelection()` handler
-- `pkg/gui/gui.go`:
-  - Added `GetItemID` function to containers panel initialization
-
-**Implementation:**
-- Space key toggles selection on current item, moves to next
-- Status bar shows "Selected: N containers" when items selected
-- Bulk delete: confirm once, delete all stopped selected containers
-- Bulk stop: confirm once, stop all running selected containers
-- Clear selections after successful operation
-- Falls back to single-item behavior if no selections
-
-**Usage:**
-- Press Space to select/deselect containers
-- Press 'd' to delete selected (or current)
-- Press 's' to stop selected (or current)
-
-**Testing:**
-- Build verified
-- All tests pass
-- Manual testing: multi-select, bulk operations work
-
----
-
-#### Streaming Stats ✅ COMPLETE (PHASE 2 COMPLETE!)
-Real-time container CPU, memory, and network statistics streaming.
-
-**Status:** Implemented and tested
-
-**Architecture:**
-- `pkg/commands/container.go`: Added `GetContainerStatsStream(id string) *exec.Cmd`
-  - Builds: `container stats <id> --format json`
-  - Returns unexecuted command for subprocess runner
-- `pkg/gui/keybindings.go`:
-  - Added 'v' keybinding in containers panel
-  - Added `handleStreamStats()` handler
-  - Validation: only runs on **running** containers
-- Reuses subprocess infrastructure from streaming logs
-
-**Implementation:**
-- Suspend gocui → run `container stats <id> --format json` in foreground → resume gocui
-- Streams live metrics: CPU, memory, network I/O
-- Ctrl+C stops streaming and returns to UI
-- Error handling: shows status message if container not running
-
-**JSON Stats Format:**
-```json
-{
-  "memoryLimitBytes": 1073741824,
-  "memoryUsageBytes": 2060288,
-  "cpuUsageUsec": 2996,
-  "blockWriteBytes": 0,
-  "blockReadBytes": 1900544,
-  "networkTxBytes": 602,
-  "networkRxBytes": 16750,
-  "numProcesses": 1,
-  "id": "container-id"
-}
-```
-
-**Usage:** Select a running container, press 'v' to view streaming stats
-
-**Testing:**
-- Unit tests: command construction verified
-- All tests pass: `go test ./pkg/commands`
-- Build verified: `go build -o lazycontainer .`
-- Manual testing: stats stream on running containers
-
----
-
-## Phase 2: Interactive Features ✅ COMPLETE!
-
-All Phase 2 features implemented:
-- ✅ Streaming logs ('f' keybinding)
-- ✅ Container exec/attach ('e' keybinding)
-- ✅ Bulk operations (Space to select)
-- ✅ Streaming stats ('v' keybinding)
-
-
-### Phase 3: User Experience
-- [ ] Config file support (`~/.config/lazycontainer/`)
-- [ ] Custom commands per resource type
-- [ ] Menu system for complex choices
-- [ ] Options panel with keybinding help
-
-### Phase 4: Polish
-- [ ] Information panel with context help
-- [ ] Copy to clipboard functionality
-- [ ] Mouse mode toggle
-- [ ] Theme customization
-
-## Testing Commands
+## Development Commands
 
 ```bash
-# Build and run
-cd /Users/warl0ck/Code/lazycontainer
+# Build
 go build -o lazycontainer .
+
+# Run
 ./lazycontainer
 
-# Run tests
-go test ./pkg/commands/...
+# Debug mode (logs to ~/.config/lazycontainer/development.log)
+./lazycontainer -d
 
-# Set up test containers
+# Tests
+go vet ./...
+go test ./...
+go test ./... -v
+
+# Set up test environment
 ./scripts/test_setup.sh
 ```
 
-## Resume Instructions
+---
 
-1. Read this file: `/Users/warl0ck/Code/lazycontainer/IMPLEMENTATION_PLAN.md`
-2. Read the lazydocker source for reference: `/Users/warl0ck/Code/lazydocker/`
-3. Pick a feature from the Implementation Roadmap
-4. Copy patterns from lazydocker, update imports from `github.com/jesseduffield/lazydocker` to `github.com/warl0ck/lazycontainer`
-5. Replace Docker-specific code with Apple container CLI calls
+## Reference Implementation
+
+The lazydocker source at `/Users/warl0ck/Code/lazydocker/` serves as the reference. When adding features:
+
+1. Find the equivalent in lazydocker
+2. Copy patterns, update imports: `github.com/jesseduffield/lazydocker` → `github.com/warl0ck/lazycontainer`
+3. Replace Docker CLI calls with Apple `container` CLI equivalents
+4. Update this file and `docs/TESTING.md`
