@@ -81,6 +81,9 @@ func (gui *Gui) keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("containers", 'e', gocui.ModNone, gui.handleContainerExec); err != nil {
 		return err
 	}
+	if err := g.SetKeybinding("containers", 'v', gocui.ModNone, gui.handleStreamStats); err != nil {
+		return err
+	}
 	if err := g.SetKeybinding("containers", ' ', gocui.ModNone, gui.handleToggleContainerSelection); err != nil {
 		return err
 	}
@@ -761,6 +764,28 @@ func (gui *Gui) handleContainerExec(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	cmd := gui.ContainerCommand.GetContainerExec(container.GetID(), "")
+	if err := gui.runSubprocess(cmd); err != nil {
+		gui.setStatus(fmt.Sprintf("Error: %v", err))
+		return nil
+	}
+
+	gui.refresh()
+	return nil
+}
+
+func (gui *Gui) handleStreamStats(g *gocui.Gui, v *gocui.View) error {
+	container, err := gui.Panels.Containers.GetSelectedItem()
+	if err != nil {
+		gui.setStatus("No container selected")
+		return nil
+	}
+
+	if !container.IsRunning() {
+		gui.setStatus("Container is not running")
+		return nil
+	}
+
+	cmd := gui.ContainerCommand.GetContainerStatsStream(container.GetID())
 	if err := gui.runSubprocess(cmd); err != nil {
 		gui.setStatus(fmt.Sprintf("Error: %v", err))
 		return nil
