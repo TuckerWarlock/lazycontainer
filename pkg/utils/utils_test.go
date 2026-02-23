@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -167,9 +168,14 @@ func TestRenderTable(t *testing.T) {
 }
 
 func TestCopyToClipboard(t *testing.T) {
-testString := "test-container-id"
-err := CopyToClipboard(testString)
-if err != nil {
-t.Errorf("CopyToClipboard failed: %v", err)
-}
+	// Skip on non-Darwin systems since pbcopy is macOS-only
+	if runtime.GOOS != "darwin" {
+		t.Skip("pbcopy not available on non-macOS systems")
+	}
+
+	testString := "test-container-id"
+	err := CopyToClipboard(testString)
+	if err != nil {
+		t.Errorf("CopyToClipboard failed: %v", err)
+	}
 }
