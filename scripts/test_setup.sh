@@ -22,7 +22,7 @@ container image pull alpine:latest || {
 echo ""
 echo "2. Creating test volumes..."
 # Create a 250MB test volume (small, fast to allocate)
-container volume create test-volume --size 250m 2>/dev/null || echo "Volume 'test-volume' may already exist"
+container volume create -s 250M test-volume 2>/dev/null || echo "Volume 'test-volume' may already exist"
 
 echo ""
 echo "3. Creating test network..."

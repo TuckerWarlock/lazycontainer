@@ -4,7 +4,7 @@
 
 A terminal UI for managing Apple containers on macOS 26+, inspired by [lazydocker](https://github.com/jesseduffield/lazydocker).
 
-![lazycontainer screenshot placeholder]
+![lazycontainer screenshot](docs/lazycontainer_screenshot.png)
 
 ## Requirements
 
