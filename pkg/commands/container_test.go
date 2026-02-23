@@ -167,6 +167,61 @@ func TestGetContainerLogsStream(t *testing.T) {
 	t.Logf("GetContainerLogsStream command constructed correctly: %v", args)
 }
 
+func TestGetContainerExec(t *testing.T) {
+	log := GetTestLogger()
+	osCmd := NewOSCommand(log)
+	containerCmd := NewContainerCommand(log, osCmd, nil)
+
+	// Test with default shell
+	cmd := containerCmd.GetContainerExec("test-container", "")
+
+	if cmd == nil {
+		t.Fatalf("Expected non-nil command")
+	}
+
+	args := cmd.Args
+	if len(args) < 5 {
+		t.Fatalf("Expected at least 5 args, got %d: %v", len(args), args)
+	}
+
+	// args[1] should be "exec"
+	if args[1] != "exec" {
+		t.Errorf("Expected args[1] to be 'exec', got '%s'", args[1])
+	}
+
+	// args[2] should be the container ID
+	if args[2] != "test-container" {
+		t.Errorf("Expected args[2] to be 'test-container', got '%s'", args[2])
+	}
+
+	// args[3] should be "--"
+	if args[3] != "--" {
+		t.Errorf("Expected args[3] to be '--', got '%s'", args[3])
+	}
+
+	// args[4] should be the default shell "/bin/sh"
+	if args[4] != "/bin/sh" {
+		t.Errorf("Expected args[4] to be '/bin/sh', got '%s'", args[4])
+	}
+
+	t.Logf("GetContainerExec default shell command correct: %v", args)
+
+	// Test with custom command
+	cmdCustom := containerCmd.GetContainerExec("test-container", "ls -la")
+
+	argsCustom := cmdCustom.Args
+	if len(argsCustom) < 5 {
+		t.Fatalf("Expected at least 5 args for custom command, got %d: %v", len(argsCustom), argsCustom)
+	}
+
+	// args[4] should be the custom command
+	if argsCustom[4] != "ls -la" {
+		t.Errorf("Expected args[4] to be 'ls -la', got '%s'", argsCustom[4])
+	}
+
+	t.Logf("GetContainerExec custom command correct: %v", argsCustom)
+}
+
 func GetTestLogger() *logrus.Entry {
 	return logrus.WithField("test", true)
 }
